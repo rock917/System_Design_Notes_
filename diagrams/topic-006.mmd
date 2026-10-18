@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Commit received"]
+  N1["Build and verify"]
+  N2{"Checks pass?"}
+  N3["Publish immutable artifact"]
+  N4["Stop and report"]
+  N5["Deploy and observe"]
+  N6["Promote or roll back"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

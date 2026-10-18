@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Processing fails"]
+  N1["Classify and count attempts"]
+  N2{"Retry still useful?"}
+  N3["Schedule retry"]
+  N4["Move to DLQ with evidence"]
+  N5["Repair and controlled replay"]
+  N6["Confirm business resolution"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N4 -.-> N5
+  N5 --> N6

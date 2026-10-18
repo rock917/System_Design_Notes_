@@ -1,0 +1,3 @@
+# The supplied inference_api.py and all runnable labs use only Python's standard library.
+# No pip installation is required. Use Python 3.11 or newer.
+# This file explicitly records the empty third-party runtime dependency set.

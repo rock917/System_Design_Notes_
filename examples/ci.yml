@@ -1,0 +1,23 @@
+# GitHub Actions teaching workflow. Copy to .github/workflows/labs.yml in your own repository.
+# Adjust working-directory if examples live elsewhere. No deployment credentials are used.
+name: Handbook labs
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples
+    steps:
+      # For production, pin reviewed third-party action commits and update deliberately.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m unittest -v
+        env:
+          RUN_SOCKET_TESTS: "1"
+      - run: docker build -t shopstream-inference:ci .
+      - run: docker image inspect shopstream-inference:ci --format '{{.Id}}'

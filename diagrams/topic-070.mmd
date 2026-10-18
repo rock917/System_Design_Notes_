@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Token received"]
+  N1["Select trusted issuer key"]
+  N2{"Signature and claims valid?"}
+  N3["Authorize scoped action"]
+  N4["Reject and possibly refresh safely"]
+  N5["Rotate credentials by lifecycle"]
+  N6["Retire old keys after policy"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

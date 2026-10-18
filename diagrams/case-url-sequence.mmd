@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as API
+  participant P2 as Cache
+  participant P3 as Database
+  P0->>P1: GET short code
+  P1->>P2: Lookup permitted mapping
+  P2-->>P1: Miss
+  P1->>P3: Read mapping and policy
+  P3->>P1: Versioned destination
+  P1->>P2: Cache with bounded TTL
+  P1->>P0: Redirect with Location

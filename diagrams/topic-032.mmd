@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Leader commits change"]
+  N1["Append and transmit log"]
+  N2{"Required acknowledgments reached?"}
+  N3["Acknowledge according to policy"]
+  N4["Wait or fail within deadline"]
+  N5["Replica applies ordered changes"]
+  N6["Track durable progress"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

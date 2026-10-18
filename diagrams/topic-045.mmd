@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Observe demand and saturation"]
+  N1["Compute target capacity"]
+  N2{"Change exceeds policy thresholds?"}
+  N3["Add or remove bounded replicas"]
+  N4["Keep current capacity"]
+  N5["Wait for readiness and stabilize"]
+  N6["Measure effect"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

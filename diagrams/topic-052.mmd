@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Prepare green environment"]
+  N1["Verify artifact and compatibility"]
+  N2{"Green passes checks?"}
+  N3["Switch traffic and drain blue"]
+  N4["Keep blue serving"]
+  N5["Observe rollback window"]
+  N6["Retire old environment"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

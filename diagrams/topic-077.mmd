@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Cookie-authenticated mutation"]
+  N1["Validate method origin and token"]
+  N2{"Request bound to legitimate session flow?"}
+  N3["Check authorization and mutate"]
+  N4["Reject and record safe metadata"]
+  N5["Return controlled result"]
+  N6["Monitor rejection anomalies"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

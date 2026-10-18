@@ -1,0 +1,8 @@
+flowchart TD
+  N0["Browser"]
+  N1["Edge proxy"]
+  N2["Application"]
+  N3["PostgreSQL"]
+  N0 -->|HTTPS| N1
+  N1 -->|trusted hop| N2
+  N2 -->|SQL| N3

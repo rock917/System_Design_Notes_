@@ -1,0 +1,16 @@
+flowchart TD
+  N0["Client"]
+  N1["Auth + cost admission"]
+  N2["Versioned cache"]
+  N3["Bounded queue / batcher"]
+  N4["Model workers"]
+  N5["Artifact registry"]
+  N6["Usage ledger"]
+  N7["Quality evaluation"]
+  N0 -->|input| N1
+  N1 -->|permitted lookup| N2
+  N1 -->|admit| N3
+  N3 -->|compatible batch| N4
+  N5 -.->|verified model| N4
+  N4 -->|actual usage| N6
+  N4 -.->|approved evaluation| N7

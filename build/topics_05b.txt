@@ -1,0 +1,108 @@
+@@93|P99 Latency
+E: P99 latency is a percentile threshold: roughly 99% of measured operations finish at or below it under the chosen estimation convention. It reveals slow experiences hidden by averages. It is not the maximum, and a small sample gives an unstable estimate.
+A: Ranking students' travel times shows how late the slowest few journeys are. The average can look comfortable while a minority repeatedly misses class. Which journeys are measured matters as much as the arithmetic.
+M: Define the population, time window, success/failure inclusion, and percentile convention. Sort raw samples or aggregate compatible histogram buckets. For nearest-rank P99, select rank ceil(0.99*N). Report sample size and bucket resolution. Segment by route and workload size, and do not average per-instance percentiles.
+W: Of 1,000 requests, 980 take 20 ms and 20 take 2,000 ms. Mean latency is 59.6 ms, while nearest-rank P99 is 2,000 ms. The mean hides a severe problem for 2% of requests. The lab computes this distribution exactly.
+T: Median describes the middle, P95 and P99 describe progressively smaller tails, and maximum captures the single worst sample but is noisy. Histograms estimate quantiles; exact raw-sample percentiles have storage and processing costs.
+F: Ten samples cannot characterize a stable one-percent tail. Removing timed-out requests makes the tail look better. Comparing different traffic mixes can create an apparent regression unrelated to code.
+D: Fleet P99 requires the combined distribution. One instance with very few slow requests and another with many fast requests cannot be summarized by averaging their two P99 values. Preserve bucket counts or use a suitable mergeable sketch with documented error.
+X: Run the distribution demo and verify 59.6 ms mean and 2,000 ms P99. Merge two sample populations and compare with averaging their percentiles. Design a latency dashboard that shows sample count, timeouts, and route mix.
+V: Collect latency population|Validate sample size and boundaries|Distribution data aggregatable?|Compute percentile from combined samples|Avoid averaging local percentiles|Inspect tail cohort and errors|Report threshold with uncertainty
+R: 61,91,92,94
+L: performance.py
+@@94|Tail Latency
+E: Tail latency describes unusually slow operations at the high end of a distribution. ShopStream's page can wait for its slowest required dependency even when most calls are fast. Rare pauses become common at scale and under fanout.
+A: A group excursion departs only when its last required traveler arrives. Even if each traveler is usually punctual, a larger group is more likely to contain someone late.
+M: Measure high percentiles and correlate slow traces with queueing, garbage collection, locks, disk, network loss, cold starts, and workload skew. Reduce variance and unnecessary fanout. Use deadlines, bounded queues, isolation, and carefully controlled hedging only for safe operations with spare capacity.
+W: If each of 100 independent required calls has a 1% chance of being slow, the chance at least one is slow is 1-0.99^100, about 63.4%. Independence is an explicit simplifying assumption; correlated failures can change the result substantially.
+T: Average optimization can leave tails unchanged. Hedged requests race duplicate safe work to reduce delay but add load and need cancellation/deduplication. Replication, caching, and graceful partial responses can help if the product permits their semantics.
+F: Hedging every request during overload amplifies the cause. Raising timeouts hides failures while tying up resources. Ignoring slow tenants or large inputs in aggregate dashboards masks unfairness.
+D: Tail-at-scale behavior depends on whether all branches are required, a quorum suffices, or partial results are acceptable. Design the response contract first. For inference, separate prefill, decoding, queue wait, and output length so a long answer is not mislabeled as an unexplained runtime regression.
+X: Compute the fanout probability in the lab. Identify which page widgets can fail independently without blocking checkout. Design a hedge threshold and extra-work budget for an idempotent read, including cancellation and overload disablement.
+V: Slow-tail regression observed|Trace critical path and workload mix|Cause identified with evidence?|Reduce variance or required fanout|Gather phase and saturation data|Use bounded safe mitigation|Recheck tail without overload amplification
+R: 10,11,42,91,93
+L: performance.py
+@@95|Network Partitions
+E: A network partition prevents some components from communicating while others remain reachable. ShopStream's two database nodes can both be alive yet unable to exchange updates. Failures are partial and observer-dependent, which makes automatic recovery difficult.
+A: A bridge closes between two functioning towns. Each town's shops remain open, but neither can know immediately what the other sold. Being locally healthy does not imply globally coordinated service.
+M: Detect missing communication using timeouts while recognizing uncertainty. Define which side retains authority through quorum or ownership rules. Fence stale writers, preserve logs, and serve only operations allowed by the consistency contract. After communication returns, reconcile state and replay safely rather than merging blindly.
+W: Orders in region A can reach payment but not inventory. Payment and inventory both report local health. Checkout still fails because the required path is broken. Traces and synthetic cross-component tests reveal the partition that local probes miss.
+T: A partition differs from a process crash, packet loss, or high latency, although observations can look similar. CAP applies to the impossibility of particular combined guarantees under partitions. Retrying does not restore a severed network and can amplify pressure.
+F: Promoting every isolated replica creates split brain. Treating all timeouts as definitive death causes unsafe ownership changes. Failure detectors need safe actions under false suspicion, not merely aggressive thresholds.
+D: Asymmetric partitions allow A to reach B while replies or reverse calls fail. Test direction, protocol, DNS, TLS, and firewall behavior separately. Restoration can cause a replay storm, so bound catch-up and protect live traffic.
+X: Draw a partial connectivity matrix for three services. Mark which user journeys fail despite healthy processes. Plan recovery that fences authority, replays idempotently, and throttles accumulated work after the link returns.
+V: Communication fails|Determine affected paths and authority|Operation safe with available quorum?|Continue permitted work|Reject or defer unsafe operation|Restore link and reconcile logs|Drain backlog under limits
+R: 33,34,38,85,96
+L: algorithms.py
+@@96|Clock Skew
+E: Clock skew is disagreement between clocks. ShopStream cannot assume timestamps from different machines establish a perfect event order. Clock adjustments and drift can also break expiry or duration logic if the wrong clock is used.
+A: Two wall clocks show different times, so comparing their diary entries can reverse apparent order. A stopwatch measures one local duration more reliably, but it cannot directly compare events in different buildings.
+M: Use wall time for human timestamps and monotonic clocks for local elapsed time. Synchronize machines and monitor offset, while allowing for imperfect bounds. Use sequence numbers, causal metadata, or logical clocks when ordering requires more than approximate time. Token validation may allow small explicit skew, not unlimited grace.
+W: A token expires at 12:00, but one server's wall clock reads 12:03. It rejects the token early. A cache using a wall-clock difference can accidentally extend or shorten TTL after a clock step. Monotonic elapsed time prevents that local-duration problem.
+T: NTP improves synchronization but does not create a perfect global clock. Lamport clocks preserve a causal ordering implication, not physical duration. Hybrid logical clocks combine physical estimates with logical ordering under a defined algorithm.
+F: Last-write-wins based solely on wall time can discard a later causal update. Measuring latency by subtracting timestamps from different hosts adds skew error. A distributed lease needs explicit timing assumptions and fencing, not faith in synchronized clocks.
+D: If event A causally precedes B, logical timestamps can reflect that order; the reverse implication does not generally hold. For exact cross-system ordering, use an authoritative log or consensus-backed sequence where the requirements justify its cost.
+X: Simulate two machines with a three-minute offset and validate token behavior. Compare wall-time and monotonic TTL calculations under a clock step. Order events with a Lamport counter and explain which concurrent events remain arbitrarily ordered.
+V: Time-dependent decision|Choose wall monotonic or logical clock|Required assumption satisfied?|Apply bounded time or ordering rule|Use stronger authority or fail safely|Monitor offset and uncertainty|Avoid false causal conclusions
+R: 11,33,38,70
+L: algorithms.py
+@@97|DNS
+E: DNS maps names to records such as IP addresses and service information. ShopStream clients need to locate the service before making a connection. DNS caching improves speed but means a record change is not an instant global traffic switch.
+A: A phone directory maps a business name to a number. Different people may hold cached editions, and changing the directory does not interrupt calls already in progress.
+M: The application consults local and resolver caches. A recursive resolver follows delegations through the DNS hierarchy when needed and queries authoritative servers. Responses carry TTLs and may include aliases. Clients then connect to returned addresses and can cache them independently. Negative responses can also be cached.
+W: shop.example changes from one load-balancer address to another. Some clients retain the old answer until their cache policy refreshes, while existing keep-alive connections continue using the old destination. Keep a transition window and observe actual traffic migration.
+T: DNS resolves names; load balancers route connections or requests. DNS-based routing can choose regions but has coarse and variable client behavior. DNSSEC authenticates DNS data under its trust chain; it does not encrypt DNS traffic or replace TLS identity checks.
+F: Very low TTLs increase lookup load without guaranteeing immediate cutover. Forgetting negative caching makes newly created records appear absent temporarily. Hard-coded IPs bypass intended discovery and certificate-name assumptions.
+D: Troubleshoot resolution separately from TCP, TLS, and HTTP. Inspect the authoritative answer, recursive answer, client cache, and network path. Regional failures can come from split-horizon records, resolver reachability, or stale delegation rather than the application itself.
+X: Trace a cold and cached lookup on paper. Explain why DNS failover may not move an open connection. Design a migration plan with TTL preparation, overlap, certificate validation, and rollback routing.
+V: Application needs address|Check local and resolver caches|Valid cached answer exists?|Return cached records|Follow delegation to authority|Cache answer by policy|Connect and validate service identity
+R: 4,9,71,85
+L: protocols.py
+@@98|TCP vs UDP
+E: TCP provides a reliable ordered byte stream with congestion and flow control. UDP provides datagrams without built-in delivery, ordering, or retransmission guarantees. Applications choose based on required semantics; using UDP does not remove the need to behave responsibly under network congestion.
+A: TCP resembles a numbered document delivery process that repairs missing pages before exposing the next contiguous text. UDP resembles sending separate postcards; the application decides what missing or reordered cards mean.
+M: TCP establishes connection state, numbers bytes, acknowledges reception, retransmits losses, controls sender rate, and presents an ordered stream without application message boundaries. UDP sends bounded datagrams with minimal transport state. Protocols built on UDP, such as QUIC, can add reliability, encryption, streams, and congestion control.
+W: A TCP receiver gets bytes for the end of a message before earlier bytes; it waits for the missing bytes before delivering the contiguous stream. A UDP receiver may receive a later datagram first and choose to discard, reorder, or process it according to the application protocol.
+T: TCP is appropriate for many reliable transfers. UDP can suit real-time media, discovery, or custom transports, but reliability must be designed where needed. TCP does not guarantee the remote application committed an operation merely because bytes were acknowledged.
+F: Assuming one send equals one TCP receive breaks framing. Assuming UDP is always faster ignores workload and implementation. Large datagrams risk fragmentation or path MTU problems; application protocols need size strategy and loss handling.
+D: Flow control protects the receiver; congestion control protects the network path. These are distinct feedback loops. Real-time media may prefer a missing frame over a late one, while a payment instruction cannot simply disappear without an application acknowledgment and reconciliation contract.
+X: Frame two messages over a byte stream and simulate partial reads. Reorder three datagrams and define application handling. Explain why a successful socket write does not prove an order was durably committed.
+V: Application sends data|Choose required transport semantics|Reliable ordered bytes required?|Use TCP with explicit message framing|Use datagrams with application policy|Handle loss flow and congestion|Confirm business outcome separately
+R: 11,22,71,99
+L: protocols.py
+@@99|HTTP/2 and HTTP/3
+E: HTTP/2 and HTTP/3 preserve HTTP request-response semantics while changing how messages share a connection. They reduce some connection and multiplexing overhead. HTTP/3 uses QUIC over UDP; it is not simply HTTP with reliability removed.
+A: Several conversations share a delivery route. HTTP/2 labels each conversation but still depends on one ordered TCP stream. QUIC gives streams separate delivery order so loss in one stream need not directly block unrelated stream bytes.
+M: HTTP/2 multiplexes framed streams over TCP and compresses headers with HPACK. TCP loss can block delivery of later bytes across streams. HTTP/3 maps HTTP onto QUIC streams, with integrated TLS 1.3 security and QPACK header compression. QUIC supplies reliability and congestion control over UDP; stream and connection flow control still impose limits.
+W: A browser fetches HTML, CSS, and images concurrently. Under HTTP/2, a lost TCP segment can delay all streams awaiting subsequent bytes. Under HTTP/3, unrelated streams can continue when their required data is available, although shared congestion control and dependencies still affect total performance.
+T: HTTP/1.1 often uses multiple connections for concurrency. HTTP/2 improves multiplexing but retains TCP head-of-line effects. HTTP/3 changes transport behavior and can support connection migration, but firewall, implementation, and workload conditions determine actual benefit.
+F: Claiming HTTP/3 eliminates all head-of-line blocking is too broad. Application dependencies and compression/control-stream dependencies still exist. Assuming UDP is blocked everywhere or works everywhere is equally unreliable; fallback and measurement matter.
+D: Connection reuse, stream limits, prioritization, and proxy behavior affect performance as much as protocol labels. Benchmark realistic networks and payloads. Early data can be replayed under relevant conditions, so non-idempotent operations require deliberate handling.
+X: Draw a lost segment under HTTP/2 and a lost QUIC stream packet under HTTP/3. Mark shared congestion separately from stream delivery. Design a client fallback test and compare cold versus reused connection latency without inventing universal speedups.
+V: Client requests HTTP connection|Negotiate supported protocol|HTTP3 path available and permitted?|Use QUIC streams over UDP|Use supported HTTP over TCP|Apply flow congestion and HTTP semantics|Measure actual user outcome
+R: 71,91,98,100
+L: protocols.py
+@@100|gRPC
+E: gRPC is an RPC framework that lets clients call defined remote service methods using generated interfaces and structured messages. ShopStream can use it between internal services when typed contracts and streaming fit the workload. A remote method still has network failure semantics.
+A: Departments exchange standardized forms through a courier. Generated forms reduce spelling mistakes, but they cannot guarantee the courier arrives or that the receiving department completes the work exactly once.
+M: Define services and messages, commonly in Protocol Buffers, generate client/server code, establish a channel, call methods with deadlines and metadata, and handle status codes. Standard gRPC commonly uses HTTP/2 and supports unary, server-streaming, client-streaming, and bidirectional-streaming methods. Propagate cancellation and trace context and enforce authentication and authorization.
+W: Orders calls ReserveInventory with order ID, SKU, quantity, and a deadline. If the response times out, the reservation may still exist. A stable operation ID and query/reconciliation method resolve the ambiguity; the generated stub does not remove it.
+T: JSON/HTTP is easy to inspect and broadly compatible with public clients. gRPC offers typed binary contracts and streaming at the cost of tooling and browser integration considerations. REST resource semantics and RPC method semantics are design choices, not quality rankings.
+F: Omitting deadlines lets calls wait too long. Reusing removed protobuf field numbers breaks compatibility. Retrying every status can repeat side effects. Large messages can exceed limits or consume excessive memory.
+D: Keep channels reusable and account for load balancing across long-lived multiplexed connections. Backpressure and flow control exist at multiple layers; application handlers still need bounded work. Verify proxy, browser gateway, and language-runtime support for the chosen streaming mode.
+X: Read the supplied proto contract and identify unary versus streaming methods. Add a new optional field without reusing numbers. Design timeout and idempotency behavior for a reserve call whose response is lost after commit.
+V: Client invokes generated method|Attach deadline identity and metadata|Contract and authorization valid?|Execute bounded RPC handler|Return structured status|Serialize response or stream|Handle ambiguous outcome safely
+R: 11,14,82,99
+L: service.proto
+@@101|Webhooks
+E: A webhook is an HTTP callback notifying another system that an event occurred. ShopStream can receive payment updates or notify merchants about orders. The sender and receiver need an explicit delivery, authenticity, and replay contract because networks fail and callbacks can repeat.
+A: A supplier calls when a parcel ships. The recipient verifies who is calling and records the shipment number before acting. Repeated calls about the same shipment should not create repeated deliveries.
+M: Sign a canonical raw payload with a shared secret or supported asymmetric scheme, include event ID and timestamp, verify before parsing business actions, enforce replay policy, durably enqueue or record the event, and acknowledge promptly. Process idempotently with bounded retries and a DLQ. Validate destination URLs and egress for outgoing callbacks.
+W: A payment provider sends event E. ShopStream verifies the signature over the exact raw bytes, records E under a unique key, and returns success. A duplicate delivery finds E and returns an appropriate successful acknowledgment without charging or fulfilling again.
+T: Webhooks push updates; polling pulls them. Push is timely but requires a reachable authenticated receiver and retry contract. A 2xx acknowledgment should mean durable acceptance under the documented semantics, not necessarily that all downstream processing finished.
+F: Parsing and reserializing JSON before signature verification changes bytes. Returning success before durable acceptance loses events on crash. Trusting event order can regress payment state; use provider object state or versions for reconciliation.
+D: Signing proves possession of a credential, not freshness or uniqueness. Combine signature verification, timestamp tolerance, event-ID deduplication, secret rotation, and periodic source reconciliation. Restrict callback destinations to prevent the webhook sender becoming an SSRF proxy.
+X: Run the HMAC verification and tamper tests. Simulate duplicate delivery and assert one effect. Design sender retry windows and receiver reconciliation for a three-hour outage, including events older than the normal timestamp window.
+V: Callback received|Verify raw-body signature and freshness|Authentic allowed event?|Durably record event ID|Reject invalid callback|Acknowledge then process idempotently|Retry or reconcile unresolved work
+R: 12,14,20,67,80
+L: security.py

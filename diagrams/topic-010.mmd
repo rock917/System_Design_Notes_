@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Call dependency"]
+  N1["Read breaker state"]
+  N2{"Call permitted?"}
+  N3["Attempt with deadline"]
+  N4["Fail fast or safe fallback"]
+  N5["Record result and transition"]
+  N6["Return outcome"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

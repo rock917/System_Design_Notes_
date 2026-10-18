@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Database"]
+  N1["Backup process"]
+  N2["Protected archive"]
+  N3["Key manager"]
+  N4["Isolated restore"]
+  N5["Integrity validation"]
+  N0 -->|consistent capture| N1
+  N1 -->|encrypted copy| N2
+  N3 -.->|authorized keys| N4
+  N2 -->|restore| N4
+  N4 -->|business invariants| N5

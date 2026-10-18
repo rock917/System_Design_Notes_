@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Service emits measurements"]
+  N1["Collect with bounded labels"]
+  N2{"Data fresh and valid?"}
+  N3["Evaluate user and resource trends"]
+  N4["Investigate telemetry gap"]
+  N5["Alert on actionable condition"]
+  N6["Verify response and recovery"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

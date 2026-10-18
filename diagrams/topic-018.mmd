@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Begin cross-system change"]
+  N1["Ask participants to prepare"]
+  N2{"All prepared?"}
+  N3["Persist commit decision"]
+  N4["Persist abort decision"]
+  N5["Notify and recover participants"]
+  N6["Resolve atomic outcome"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

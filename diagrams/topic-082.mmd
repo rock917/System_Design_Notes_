@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Producer proposes schema change"]
+  N1["Check syntax and semantic compatibility"]
+  N2{"Supported readers handle change?"}
+  N3["Publish versioned contract"]
+  N4["Introduce adapter or new version"]
+  N5["Roll out mixed-version support"]
+  N6["Retire only after retention window"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

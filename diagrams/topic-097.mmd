@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Application needs address"]
+  N1["Check local and resolver caches"]
+  N2{"Valid cached answer exists?"}
+  N3["Return cached records"]
+  N4["Follow delegation to authority"]
+  N5["Cache answer by policy"]
+  N6["Connect and validate service identity"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

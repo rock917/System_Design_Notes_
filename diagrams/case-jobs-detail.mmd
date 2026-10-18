@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Submitter"]
+  N1["Job API"]
+  N2["Job DB + outbox"]
+  N3["Broker"]
+  N4["Worker pool"]
+  N5["Result store"]
+  N6["DLQ / reconciler"]
+  N0 -->|operation key| N1
+  N1 -->|durable intent| N2
+  N2 -->|publish reference| N3
+  N3 -->|leased work| N4
+  N4 -->|fenced result| N5
+  N4 -->|terminal state| N2
+  N4 -.->|exhausted failure| N6

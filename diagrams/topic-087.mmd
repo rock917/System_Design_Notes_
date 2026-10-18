@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Reliability hypothesis defined"]
+  N1["Set blast radius and abort controls"]
+  N2{"Baseline observable and experiment authorized?"}
+  N3["Inject bounded fault"]
+  N4["Stop preparation and repair prerequisites"]
+  N5["Measure and remove fault"]
+  N6["Verify recovery and record learning"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

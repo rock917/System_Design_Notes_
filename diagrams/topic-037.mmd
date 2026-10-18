@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Begin transaction"]
+  N1["Acquire required locks"]
+  N2{"Lock before deadline?"}
+  N3["Read and modify protected rows"]
+  N4["Abort or retry safely"]
+  N5["Commit promptly"]
+  N6["Release all transaction locks"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Tenant client"]
+  N1["Policy gateway"]
+  N2["Atomic quota store"]
+  N3["Application workers"]
+  N4["Database pool"]
+  N5["Usage ledger"]
+  N0 -->|credential| N1
+  N1 -->|cost debit| N2
+  N1 -->|admitted request| N3
+  N3 -->|bounded query| N4
+  N3 -->|actual usage| N5

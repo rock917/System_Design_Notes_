@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Client connects"]
+  N1["Authenticate and authorize channel"]
+  N2{"Connection healthy?"}
+  N3["Exchange framed messages"]
+  N4["Reconnect with cursor"]
+  N5["Persist and acknowledge"]
+  N6["Close or resume safely"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

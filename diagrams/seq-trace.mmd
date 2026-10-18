@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant P0 as Gateway
+  participant P1 as Orders
+  participant P2 as Database
+  participant P3 as Worker
+  P0->>P1: Request with trace context
+  P1->>P2: Child database span
+  P2->>P1: Commit order and outbox
+  P1->>P0: Response span completes
+  P1->>P3: Event with trace link
+  P3->>P2: New processing span and effect
+  P3->>P1: Business completion event

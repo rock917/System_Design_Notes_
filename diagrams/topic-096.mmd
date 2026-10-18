@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Time-dependent decision"]
+  N1["Choose wall monotonic or logical clock"]
+  N2{"Required assumption satisfied?"}
+  N3["Apply bounded time or ordering rule"]
+  N4["Use stronger authority or fail safely"]
+  N5["Monitor offset and uncertainty"]
+  N6["Avoid false causal conclusions"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

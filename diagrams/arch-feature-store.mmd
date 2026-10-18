@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Raw events"]
+  N1["Versioned transform"]
+  N2["Offline feature dataset"]
+  N3["Online feature store"]
+  N4["Training pipeline"]
+  N5["Inference service"]
+  N0 -->|input| N1
+  N1 -->|historical features| N2
+  N1 -->|materialize| N3
+  N2 -->|point-in-time join| N4
+  N3 -->|fresh lookup| N5

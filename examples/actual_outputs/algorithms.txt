@@ -1,0 +1,10 @@
+initial admission: [True, True, True, True, True, False]
+after 0.5s: True
+cache hit: book
+expired: None
+breaker after failures: open
+probe: recovered closed
+jitter seconds: [0.0324, 0.0302, 0.2604, 0.0579]
+routing: ['A', 'B', 'C', 'A', 'B', 'C']
+projection: {'product': (3, 'value-3')}
+five-node quorum, reachable 2/3: False True

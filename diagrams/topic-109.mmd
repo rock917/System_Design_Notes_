@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Impact detected"]
+  N1["Declare severity and assign roles"]
+  N2{"Immediate safe mitigation available?"}
+  N3["Apply one controlled mitigation"]
+  N4["Escalate and test hypotheses"]
+  N5["Verify user and data recovery"]
+  N6["Hand off to review and actions"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

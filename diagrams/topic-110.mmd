@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Shift begins"]
+  N1["Verify access risks and handoff"]
+  N2{"Actionable page received?"}
+  N3["Acknowledge triage and escalate"]
+  N4["Continue routine observation"]
+  N5["Mitigate and record decisions"]
+  N6["Handoff and reduce recurring toil"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

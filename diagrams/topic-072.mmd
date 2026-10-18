@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Data ready for storage"]
+  N1["Obtain authorized encryption context"]
+  N2{"Key access permitted?"}
+  N3["Encrypt with integrity protection"]
+  N4["Deny and audit"]
+  N5["Store ciphertext and protected key metadata"]
+  N6["Restore through controlled decryption"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Define user journey"]
+  N1["Specify SLI and window"]
+  N2{"Target justified by user need?"}
+  N3["Adopt objective and budget policy"]
+  N4["Revise measurement or target"]
+  N5["Measure and review outcomes"]
+  N6["Adjust through explicit agreement"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Browser opens stream"]
+  N1["Authenticate and set headers"]
+  N2{"Client can receive?"}
+  N3["Send framed event and ID"]
+  N4["Cancel or bound backlog"]
+  N5["Heartbeat and retain cursor"]
+  N6["Reconnect and replay"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Heartbeat missing"]
+  N1["Start term and request votes"]
+  N2{"Majority with valid log?"}
+  N3["Become leader"]
+  N4["Remain follower or retry"]
+  N5["Replicate and fence old authority"]
+  N6["Commit with quorum"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

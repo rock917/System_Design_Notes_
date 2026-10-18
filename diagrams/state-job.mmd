@@ -1,0 +1,12 @@
+stateDiagram-v2
+  state "Queued" as S0
+  state "Running" as S1
+  state "Completed" as S2
+  state "Retry waiting" as S3
+  state "Dead letter" as S4
+  [*] --> S0
+  S0 --> S1: lease claimed
+  S1 --> S2: result committed
+  S1 --> S3: transient failure
+  S3 --> S0: retry due
+  S1 --> S4: budget exhausted

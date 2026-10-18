@@ -1,0 +1,12 @@
+stateDiagram-v2
+  state "Detected" as S0
+  state "Declared" as S1
+  state "Mitigating" as S2
+  state "Recovered" as S3
+  state "Reviewed" as S4
+  [*] --> S0
+  S0 --> S1: impact assessed
+  S1 --> S2: roles and action
+  S2 --> S3: user and data checks
+  S3 --> S4: learning review
+  S3 --> S2: recovery regresses

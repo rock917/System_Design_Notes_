@@ -1,0 +1,18 @@
+flowchart TD
+  N0["Client / CDN"]
+  N1["Gateway + API replicas"]
+  N2["Cache"]
+  N3["Orders DB + outbox"]
+  N4["Broker + workers"]
+  N5["Payment provider"]
+  N6["Telemetry"]
+  N7["Backup / recovery"]
+  N8["Identity / secrets"]
+  N0 -->|HTTPS| N1
+  N1 -->|catalog lookup| N2
+  N1 -->|transaction| N3
+  N3 -->|events| N4
+  N4 -->|operation ID| N5
+  N1 -.->|signals| N6
+  N3 -->|protected copy| N7
+  N8 -.->|identity| N1

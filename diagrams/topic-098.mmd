@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Application sends data"]
+  N1["Choose required transport semantics"]
+  N2{"Reliable ordered bytes required?"}
+  N3["Use TCP with explicit message framing"]
+  N4["Use datagrams with application policy"]
+  N5["Handle loss flow and congestion"]
+  N6["Confirm business outcome separately"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Workload submitted"]
+  N1["Count useful completed units"]
+  N2{"Completion keeps pace with arrivals?"}
+  N3["Measure sustainable headroom"]
+  N4["Locate bottleneck and bound backlog"]
+  N5["Adjust capacity or work shape"]
+  N6["Report rate with latency and assumptions"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

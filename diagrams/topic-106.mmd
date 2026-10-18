@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Chart and values selected"]
+  N1["Render templates and inspect objects"]
+  N2{"Lint and target validation pass?"}
+  N3["Install or upgrade release"]
+  N4["Correct values or templates"]
+  N5["Observe rollout and application metrics"]
+  N6["Rollback only within compatibility bounds"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

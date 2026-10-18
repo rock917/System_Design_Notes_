@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Model artifact"]
+  N1["Serving deployment"]
+  N2["User outcomes"]
+  N3["Reliability telemetry"]
+  N4["Evaluation dataset"]
+  N5["Quality review"]
+  N0 -->|verified version| N1
+  N1 -->|prediction| N2
+  N1 -->|latency/errors| N3
+  N0 -->|candidate| N5
+  N4 -->|versioned evaluation| N5
+  N2 -.->|approved feedback| N5

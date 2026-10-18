@@ -1,0 +1,13 @@
+{
+  "edition": "2026-10-18",
+  "files_in_archive": 649,
+  "pdf_pages": 734,
+  "topic_count": 111,
+  "figures": 194,
+  "local_links_checked": 7534,
+  "archive_crc_check": "passed",
+  "inventory_hash_check": "passed",
+  "inventory_self_hash": "Intentionally omitted to avoid a self-referential hash.",
+  "archive_name": "system-design-master-handbook.zip",
+  "checks": "Build aborts unless all archive members pass CRC and match the recorded SHA-256 inventory."
+}

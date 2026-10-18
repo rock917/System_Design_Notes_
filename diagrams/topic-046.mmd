@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Demand exceeds current capacity"]
+  N1["Locate parallelizable work"]
+  N2{"Shared bottleneck has headroom?"}
+  N3["Add interchangeable replicas"]
+  N4["Improve or partition bottleneck"]
+  N5["Balance and coordinate state"]
+  N6["Measure scaling efficiency"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

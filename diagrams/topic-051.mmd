@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Request arrives"]
+  N1["Load validated flag configuration"]
+  N2{"Subject matches enabled cohort?"}
+  N3["Execute new path"]
+  N4["Execute established path"]
+  N5["Record version and outcome"]
+  N6["Retire flag after decision"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

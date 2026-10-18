@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Container starts"]
+  N1["Run startup probe"]
+  N2{"Startup completed?"}
+  N3["Enable liveness and readiness"]
+  N4["Retry then restart on failure policy"]
+  N5["Route only when ready"]
+  N6["Restart only for matching failure"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

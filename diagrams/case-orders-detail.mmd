@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Buyer"]
+  N1["Order API"]
+  N2["Orders + inventory DB"]
+  N3["Outbox relay"]
+  N4["Saga worker"]
+  N5["Payment provider"]
+  N0 -->|checkout key| N1
+  N1 -->|local commit| N2
+  N2 -->|pending event| N3
+  N3 -->|work| N4
+  N4 -->|provider operation ID| N5
+  N4 -->|guarded transition| N2

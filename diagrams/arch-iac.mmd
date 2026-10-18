@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Versioned configuration"]
+  N1["Plan runner"]
+  N2["Protected state"]
+  N3["Reviewed plan"]
+  N4["Provider API"]
+  N5["Live resources"]
+  N0 -->|desired state| N1
+  N2 -->|identity mapping| N1
+  N1 -->|proposed diff| N3
+  N3 -.->|approved apply| N4
+  N4 -->|create/update| N5
+  N5 -.->|observed mapping| N2

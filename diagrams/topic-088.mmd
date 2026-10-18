@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Cost trend observed"]
+  N1["Attribute spend to useful work"]
+  N2{"Optimization preserves required outcomes?"}
+  N3["Run measured experiment"]
+  N4["Reject unsafe saving"]
+  N5["Compare unit cost and reliability"]
+  N6["Adopt with ongoing budget checks"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

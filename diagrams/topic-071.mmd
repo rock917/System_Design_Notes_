@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Client initiates secure connection"]
+  N1["Negotiate and validate certificate"]
+  N2{"Identity and handshake valid?"}
+  N3["Derive keys and protect records"]
+  N4["Abort without application secrets"]
+  N5["Exchange authenticated ciphertext"]
+  N6["Rotate and monitor certificates"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

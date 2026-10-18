@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Client"]
+  N1["One API process"]
+  N2["Catalog module"]
+  N3["Orders module"]
+  N4["PostgreSQL"]
+  N5["Payment provider"]
+  N0 -->|request| N1
+  N1 -->|local call| N2
+  N1 -->|local call| N3
+  N2 -->|read| N4
+  N3 -->|transaction| N4
+  N3 -->|idempotent API| N5

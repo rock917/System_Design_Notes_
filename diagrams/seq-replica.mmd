@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as API
+  participant P2 as Primary
+  participant P3 as Replica
+  P0->>P1: Create order
+  P1->>P2: Commit write
+  P2->>P1: Commit position
+  P2-->>P3: Replication delayed
+  P0->>P1: Read own new order
+  P1->>P2: Freshness requires primary
+  P2->>P1: Current order
+  P1->>P0: Read-your-write result

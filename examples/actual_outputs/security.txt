@@ -1,0 +1,7 @@
+bound apostrophe query: [("O'Reilly",)]
+SQL-looking text returns: []
+HTML text encoding: &lt;b&gt;review&lt;/b&gt;
+valid/tampered webhook: True False
+partner/lookalike: True False
+cross-tenant authorization: False
+safe log: {"event": "order.accepted", "order_id": 1}

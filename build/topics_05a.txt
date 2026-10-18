@@ -1,0 +1,120 @@
+@@83|Disaster Recovery
+E: Disaster recovery restores useful service after a major failure such as a lost region, corrupted database, or compromised environment. ShopStream needs a tested recovery process, not merely redundant servers. Recovery includes data integrity, credentials, dependencies, and user communication.
+A: A university keeps an emergency campus plan with alternate rooms, records, contacts, and drills. Owning spare desks does not prove classes can resume after a building closes.
+M: Identify critical functions and dependencies. Set recovery time objective (RTO), the target time to restore service, and recovery point objective (RPO), the tolerated data-loss interval. Choose backup, restore, replication, and failover strategies accordingly. Keep runbooks and required credentials accessible during the disaster, rehearse in isolation, and validate business invariants after recovery.
+W: ShopStream targets an assumed RTO of four hours and RPO of fifteen minutes. A restore drill takes five hours and the newest recoverable log is thirty minutes old. The design misses both objectives regardless of how reassuring the architecture diagram looks.
+T: Cold recovery costs less but takes longer. Warm standby reduces startup work. Active-active can reduce some interruption but increases consistency and operational complexity. Different data classes can have different objectives.
+F: Backups without restore tests give false confidence. Recovery credentials stored only in the failed region become unavailable. DNS, certificate, provider, and infrastructure-state dependencies can block an otherwise successful database restore.
+D: A cyber incident may require rebuilding trust, rotating credentials, and selecting a clean recovery point rather than immediately promoting a replica containing the same corruption. Keep integrity checks and evidence preservation in the recovery plan.
+X: Build a dependency-ordered recovery checklist. Measure a local restore and compare actual RTO/RPO with targets. Design a regional drill that checks order totals, payment reconciliation, DNS routing, and customer-visible behavior before declaring recovery.
+V: Major outage declared|Assess scope and recovery point|Trusted recovery path available?|Restore or activate standby|Escalate and preserve evidence|Validate data and user journeys|Resume with measured RTO and RPO
+R: 84,85,86,104
+L: orders.py
+@@84|Backups
+E: A backup is a recoverable historical copy of data. ShopStream needs it when data is deleted, corrupted, or unavailable. Replicas copy current changes, including mistakes, so they cannot replace retained recovery points.
+A: A student keeps dated copies of a thesis. A synchronized folder may faithfully synchronize accidental deletion; a historical copy can recover the earlier work.
+M: Choose full and incremental backups plus transaction-log retention where point-in-time recovery is supported. Make copies application-consistent, encrypt them, separate access and failure domains, verify checksums, and test restores. Define retention, legal holds, and deletion policy. Include configuration and keys required to interpret the data.
+W: A mistaken update occurs at 14:00. Restore a base backup and replay database logs to just before the bad transaction in an isolated environment. Reconcile legitimate writes after that point rather than blindly replacing production with an older snapshot.
+T: Snapshots are fast but depend on storage and consistency guarantees. Logical exports aid portability but may be slower and omit some operational state. Immutable or offline copies reduce some compromise risks while complicating retention and access.
+F: A successful backup job does not prove a usable restore. Storing all copies under the same compromised administrator increases correlated risk. Excluding encryption keys makes encrypted backups unrecoverable.
+D: Restore throughput sets a lower bound on recovery time. At an assumed sustained 200 MB/second, reading 2 TB takes about 10,000 seconds before replay and verification. Test realistic data volume and recovery hardware, not only tiny development databases.
+X: Back up and restore the SQLite order lab, then compare row counts and invariants. Calculate transfer-only restore time. Design a point-in-time recovery procedure with isolation, validation, and reconciliation of later valid transactions.
+V: Backup schedule triggers|Capture consistent data and logs|Copy verified and protected?|Retain across failure domains|Retry and alert backup gap|Restore in isolated drill|Validate recoverability and expiry
+R: 32,72,81,83
+L: orders.py
+@@85|Failover
+E: Failover transfers service responsibility to another instance or site after failure. ShopStream can promote a standby database or reroute API traffic. The transition must avoid two active owners and account for stale data and clients that still use old routes.
+A: A substitute conductor takes over an orchestra. The old conductor must stop giving conflicting directions, and the substitute needs the current score rather than last week's version.
+M: Detect failure with multiple signals, decide authority through a safe coordination mechanism, fence the old owner, check candidate data freshness, promote, update routing, reconnect clients, and validate business operations. Record the failover epoch and prepare a controlled failback process.
+W: The primary database becomes unreachable from one region but remains alive elsewhere. Promoting a replica based only on one observer can create split brain. Quorum decisions and fencing establish one write authority before routing new orders.
+T: Automatic failover reduces response time but can amplify false detection. Manual failover allows judgment but depends on operator availability. Stateless traffic failover and stateful database promotion have different data-loss and correctness implications.
+F: Equating timeout with confirmed death creates unsafe promotion. Failing back immediately after recovery can oscillate authority. DNS updates do not instantly move established connections. Track stale clients and connection pools through the transition.
+D: A surviving region may lack capacity for all transferred traffic. Reserve failover headroom or define priority shedding. After asynchronous promotion, reconcile possible lost or duplicated external side effects using durable operation IDs.
+X: Draw a partition where both database hosts remain alive. Identify the fencing step before promotion. Plan a failover test that measures detection, promotion, routing, client reconnection, and end-to-end recovery separately.
+V: Suspected primary failure|Validate authority and candidate freshness|Safe promotion conditions met?|Fence old owner and promote|Remain unavailable or escalate|Update routing and reconnect|Verify and plan failback
+R: 29,32,33,83,95
+L: algorithms.py
+@@86|Multi-Region Deployment
+E: Multi-region deployment places service components in geographically separated areas. It can reduce user distance and survive some regional failures. ShopStream must choose where writes are authoritative and what happens when regions cannot communicate.
+A: A business opens branches in different cities. Local service improves convenience, but keeping shared inventory accurate across branches requires rules and communication.
+M: Choose active-passive, partitioned ownership, or active-active per data and operation. Replicate artifacts and required data, route users, manage identity and secrets, and reserve recovery capacity. Define consistency, RPO, RTO, conflict handling, and failback. Test regional dependency independence rather than assuming different locations imply independent failures.
+W: Catalog reads are local in both regions, while each order has one home-region writer. During a partition, browsing may use a stale replica, but checkout for an unreachable owner is delayed or rejected unless an explicit safe ownership-transfer protocol runs.
+T: Active-passive simplifies write authority but pays for standby and may increase normal latency for distant users. Active-active improves locality for some operations but adds conflict and coordination cost. Not every small service needs multiple regions.
+F: Both regions depending on one secret manager, DNS account, or payment integration preserves a global failure point. Ignoring data-residency constraints can make an otherwise technical design unusable. Cross-region traffic and replication add cost.
+D: Physical distance imposes latency. A write requiring a remote acknowledgment includes at least the relevant network round trip plus processing. Keep tightly coupled transactions local when possible and expose asynchronous workflows where the business permits them.
+X: Assign home regions for orders and local replicas for catalog. Simulate one region's loss and calculate remaining capacity. Write a consistency and residency contract for multi-region inference, including model artifacts, private prompts, and provider dependencies.
+V: User request routed by region|Determine data owner and policy|Local or safe remote authority available?|Serve under defined consistency|Degrade or initiate fenced failover|Replicate and reconcile changes|Validate regional independence
+R: 34,35,83,85,95
+L: algorithms.py
+@@87|Chaos Engineering
+E: Chaos engineering tests reliability hypotheses by introducing controlled failures. ShopStream can learn whether timeouts, failover, and recovery actually work before an uncontrolled incident. The experiment must have a bounded scope, observability, and an immediate stop mechanism.
+A: A fire drill tests whether people can use the exits. It does not begin by setting the whole building on fire. The experiment should reveal a weakness without exceeding an agreed risk boundary.
+M: State a measurable steady-state hypothesis, choose a realistic failure, establish baselines and blast radius, prepare abort conditions and rollback, inject the fault, observe user impact, then remove the fault and verify recovery. Begin in local or staging environments and expand only with explicit operational authorization.
+W: Hypothesis: losing one API replica keeps checkout success within its target because two others have headroom. Terminate one staging replica under representative load. Observe error rate, latency, endpoint changes, and recovery. If the remaining database pool saturates, record that disproved assumption.
+T: Unit tests verify local logic; load tests explore capacity; chaos experiments explore behavior under failure. They complement each other. Random destruction without a hypothesis produces risk and weak learning.
+F: Running an experiment while telemetry is broken makes impact unknown. Forgetting to remove injected latency leaves a persistent incident. A passing small test does not prove every region, traffic mix, or correlated failure is safe.
+D: Test compound failures only after single-failure behavior is understood. Correlated dependencies such as shared DNS or credentials often matter more than one process crash. Turn findings into owned engineering actions and regression drills.
+X: Write a staging-only experiment for a slow payment dependency. Define abort thresholds and cleanup. Predict whether circuit breaking, retries, and queues interact safely, then compare the prediction with measured results.
+V: Reliability hypothesis defined|Set blast radius and abort controls|Baseline observable and experiment authorized?|Inject bounded fault|Stop preparation and repair prerequisites|Measure and remove fault|Verify recovery and record learning
+R: 10,11,83,109,111
+L: messaging.py
+@@88|Cost Optimization
+E: Cost optimization reduces spending while preserving required behavior. ShopStream should measure cost per useful order or inference result, not merely minimize a server bill. Cheaper infrastructure that causes retries, lost sales, or excessive engineering effort may cost more overall.
+A: A delivery company compares fuel, vehicles, drivers, delays, and failed deliveries per successful parcel. Buying the cheapest vehicle is not necessarily the cheapest reliable service.
+M: Attribute costs to workloads and tenants, establish unit economics, identify idle capacity and dominant drivers, then test right-sizing, caching, batching, storage lifecycle, and commitment choices. Include network transfer, telemetry, support, and operational labor. Preserve reliability headroom and track before/after cost at comparable demand.
+W: An inference batch completes 100 useful predictions for an assumed compute cost of 0.20 currency units: 0.002 each before storage and networking. Doubling batch size may lower compute cost but violate interactive latency. Separate batch and interactive workloads before optimizing them together.
+T: Reserved or committed capacity trades flexibility for pricing benefits under provider-specific terms. Spot capacity suits interruptible checkpointed work. Managed services may cost more per resource while reducing operational labor and failure risk.
+F: Turning off replicas without testing failure capacity sacrifices availability. Counting cached requests as free ignores cache and invalidation cost. Overly verbose logs can become a major bill and privacy burden.
+D: Optimize the denominator: a cheap failed prediction is not a useful result. For ML, track cost per quality-qualified outcome, model version, and input size. Any financial figures in the handbook are hypothetical arithmetic, not current provider prices.
+X: Calculate unit cost from a supplied workload and resource total. Compare two batching policies using both P99 and cost. Design an experiment that reduces log volume while preserving security audit and incident evidence.
+V: Cost trend observed|Attribute spend to useful work|Optimization preserves required outcomes?|Run measured experiment|Reject unsafe saving|Compare unit cost and reliability|Adopt with ongoing budget checks
+R: 45,47,63,89,92
+L: performance.py
+@@89|Cold Starts
+E: A cold start is initialization work before an instance can serve useful requests. ShopStream's inference process may load dependencies, download weights, allocate memory, and warm execution paths. A fast function body can still feel slow when startup dominates.
+A: A bakery must heat the oven before the first loaf. Keeping it warm costs energy, while heating on demand delays the first customer. Demand shape determines the trade-off.
+M: Break startup into image transfer, runtime initialization, dependency import, network setup, model loading, and warmup. Measure each phase. Reduce artifact size and unnecessary initialization, cache permitted artifacts, use startup probes, and consider warm capacity. Do not report readiness until required initialization succeeds.
+W: A model takes an assumed 30 seconds to load but 100 ms to run. A burst after scaling to zero waits far longer than the inference execution time. Keeping one warm replica improves first-request latency but incurs idle cost and does not cover an arbitrarily large burst.
+T: Lazy initialization can shorten startup but moves delay to the first relevant request. Eager initialization makes readiness honest at higher startup cost. Serverless, containers, and VMs all have startup paths with different components.
+F: Downloading unverified model artifacts during every request is slow and unsafe. Liveness killing a still-loading model creates an endless loop. Measuring only warm benchmarks hides the experience after idle periods and deployments.
+D: Model warmup may depend on input shape, compilation, and accelerator kernels. One warmup example may not cover every production shape. Measure first-request and steady-state distributions by shape and version, then cap accepted concurrency during ramp-up.
+X: Time import, model setup, and first request separately in the toy API. Design a warm-capacity policy for predictable morning traffic. Explain which latency moves from startup to request time under lazy loading.
+V: New instance allocated|Load runtime artifacts and model|Initialization verified?|Mark ready and warm paths|Retry boundedly or fail startup|Accept bounded traffic|Measure cold and warm behavior
+R: 7,45,57,90
+L: inference_api.py
+@@90|Serverless Limits
+E: Serverless platforms manage execution infrastructure but impose resource and service quotas. ShopStream must design around execution duration, concurrency, memory, payload, storage, and downstream connection limits. Exact limits vary by provider, product, region, and account and must be checked before deployment.
+A: Renting a fully serviced meeting room removes building maintenance but still comes with capacity, booking-time, and equipment limits. Managed operation does not mean unlimited operation.
+M: Inventory platform limits and adjustable quotas, estimate concurrent demand, bound request sizes and duration, externalize durable state, and design retry/idempotency behavior. Use queues for work exceeding synchronous expectations. Reuse connections where supported while accounting for scale-out multiplication. Instrument throttling and cold starts separately.
+W: At 200 requests/second and an assumed average execution time of 2 seconds, average concurrency is about 400 under stable conditions. A quota of 300 in this hypothetical example cannot sustain that load without throttling, queueing, shorter execution, or a quota/capacity change.
+T: Serverless can reduce infrastructure management and suit bursty workloads. Long steady jobs, large models, specialized hardware, or strict latency may favor containers or managed serving. Billing granularity and idle behavior affect economics.
+F: Storing the only copy of a job result in ephemeral local storage loses it on replacement. One new database connection per invocation can overwhelm the database. Assuming automatic retries are exactly-once causes duplicated effects.
+D: Platform timeout does not guarantee an external call was undone. Preserve operation IDs and reconciliation. Treat provider quotas as configuration inputs with monitoring and load tests, not as numbers copied permanently into a textbook.
+X: Calculate concurrency with Little's Law. Classify a long-running inference task into synchronous acceptance plus asynchronous completion. Build a deployment checklist for actual provider limits without inventing fixed universal values.
+V: Invocation arrives|Check quotas and execution budget|Work fits synchronous limits?|Execute bounded idempotent task|Reject or enqueue durable job|Persist result outside ephemeral runtime|Observe throttling and cost
+R: 11,14,28,89
+L: performance.py
+@@91|Latency
+E: Latency is the elapsed time for an operation from a defined start to a defined finish. ShopStream users experience DNS, connection setup, queueing, processing, and transfer together. A server's function timer measures only part of that journey.
+A: A restaurant's dining delay includes waiting for a table, ordering, cooking, and delivery. Measuring only cooking time can make an overcrowded restaurant look fast.
+M: Define the measurement boundary and clock. Decompose sequential phases and identify parallel critical paths. Use monotonic clocks for durations, record distributions, and segment by operation and workload size. Establish an end-to-end budget, then profile the dominant phases before optimizing code.
+W: DNS 20 ms, connection/TLS 60 ms, queueing 100 ms, application 40 ms, database 50 ms, and transfer 30 ms sum to 300 ms in a simplified sequential example. Reusing a connection removes some setup from later requests, but not database or queue time.
+T: Latency is time per operation; throughput is completed operations per time. Optimizing one can worsen the other, especially through batching. Time to first byte or token differs from total completion time.
+F: Comparing client and server timers with different boundaries yields false conclusions. Average latency hides rare stalls. A load generator that slows its submissions when the service slows can underreport overload effects through coordinated omission.
+D: Queueing grows sharply near saturation. In the idealized M/M/1 model, mean time in system is 1/(mu-lambda), requiring lambda<mu and strong distribution assumptions. Real systems differ, but the model explains why running at the capacity cliff is risky.
+X: Add the worked phase budget and identify the largest reducible part. Compare cold and reused connections. Design an open-loop load test with bounded safety limits and record latency from intended submission time where appropriate.
+V: Operation starts|Measure each phase with clear boundary|Dominant delay identified?|Optimize critical measured phase|Add timing or profile evidence|Retest representative distribution|Check end-to-end user improvement
+R: 11,28,92,93,94
+L: performance.py
+@@92|Throughput
+E: Throughput is the rate of completed useful work. ShopStream may measure successful orders/second, bytes/second, or predictions/second. Counting accepted requests alone can hide an accumulating queue and does not prove the system is keeping up.
+A: A factory's output is finished products per hour, not boxes entering the building. Work in progress grows when intake exceeds completion, even if every machine appears busy.
+M: Define the work unit and success condition, measure arrivals and completions over explicit intervals, and track concurrency, queue length, and latency. Increase load gradually to find the sustainable rate that still satisfies objectives. Identify the bottleneck and distinguish burst throughput from long-duration capacity.
+W: At 500 completions/second and average end-to-end time 0.2 seconds in a stable system, Little's Law gives average in-flight work L=lambda*W=100. Doubling concurrency beyond useful capacity can increase waiting without increasing completions.
+T: Batching may improve throughput by amortizing overhead while worsening individual latency. Parallelism helps only until shared resources saturate. Bytes/second and requests/second answer different questions when payload sizes vary.
+F: Reporting only peak one-second throughput exaggerates sustainable capacity. Including failed fast responses as success hides overload. A closed-loop benchmark can limit offered load through client waiting, so state the load model.
+D: ML throughput depends on input lengths, output lengths, batch shape, hardware, and quality requirements. Report workload distribution and successful useful outputs, not an unexplained requests/second number. Keep benchmark assumptions reproducible and avoid vendor-comparison claims without evidence.
+X: Compute L for the numerical example. Plot arrivals and completions with a growing queue. Compare batches of different sizes using both useful throughput and latency SLO compliance, not just accelerator utilization.
+V: Workload submitted|Count useful completed units|Completion keeps pace with arrivals?|Measure sustainable headroom|Locate bottleneck and bound backlog|Adjust capacity or work shape|Report rate with latency and assumptions
+R: 44,45,88,91
+L: performance.py

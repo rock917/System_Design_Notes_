@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Slow query observed"]
+  N1["Capture plan and waits"]
+  N2{"Estimate matches reality?"}
+  N3["Optimize measured bottleneck"]
+  N4["Refresh statistics and inspect skew"]
+  N5["Benchmark representative workload"]
+  N6["Keep or revert change"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

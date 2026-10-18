@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Application"]
+  N1["Local cache"]
+  N2["Shared cache"]
+  N3["Authoritative DB"]
+  N4["Invalidation relay"]
+  N5["Outbox"]
+  N0 -->|lookup| N1
+  N0 -->|lookup| N2
+  N0 -->|bounded miss| N3
+  N3 -->|same commit| N5
+  N5 -->|event| N4
+  N4 -.->|invalidate| N2

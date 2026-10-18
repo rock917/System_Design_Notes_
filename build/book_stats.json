@@ -1,0 +1,27 @@
+{
+  "topics": 111,
+  "parts": 15,
+  "case_studies": 8,
+  "unique_interview_questions": 1110,
+  "conceptual_questions": 555,
+  "scenario_questions": 333,
+  "advanced_followups": 222,
+  "topic_exercises": 333,
+  "practical_labs": 30,
+  "architecture_exercises": 15,
+  "incident_scenarios": 10,
+  "figures": 194,
+  "figure_categories": {
+    "flowchart": 111,
+    "architecture": 41,
+    "sequence": 17,
+    "state": 8,
+    "illustration": 17
+  },
+  "main_words": 229359,
+  "authored_topic_core_words": 32687,
+  "minimum_authored_topic_words": 259,
+  "maximum_authored_topic_words": 385,
+  "python_demo_modules": 9,
+  "configuration_and_contract_files": 13
+}

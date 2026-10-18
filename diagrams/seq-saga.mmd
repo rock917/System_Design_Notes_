@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant P0 as Coordinator
+  participant P1 as Inventory
+  participant P2 as Payment
+  participant P3 as Workflow store
+  P0->>P3: Persist workflow start
+  P0->>P1: Reserve with operation ID
+  P1->>P0: Reservation confirmed
+  P0->>P2: Attempt payment
+  P2-->>P0: Known decline
+  P0->>P3: Persist compensation intent
+  P0->>P1: Release reservation idempotently
+  P1->>P0: Release confirmed
+  P0->>P3: Persist rejected terminal state

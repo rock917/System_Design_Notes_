@@ -1,0 +1,264 @@
+@@20|Dead Letter Queues
+E: A dead letter queue isolates messages that cannot be processed under the normal retry policy. One malformed receipt job should not monopolize ShopStream's notification workers forever. Moving it aside preserves evidence and lets valid work progress; it does not count as successful business completion.
+A: A postal service puts undeliverable letters in a separate office for investigation. The letters still need resolution, and blindly returning all of them to the same address repeats the failure.
+M: Classify permanent and transient errors, record attempts, and move exhausted messages with their original IDs, timestamps, payload version, and sanitized error metadata. Restrict access because payloads may contain personal information. Alert on arrival and age. Replay through a controlled tool after correcting the cause, preserving deduplication keys and limiting replay rate.
+W: An email event lacks a required address. Three attempts fail, then it enters the DLQ. An engineer corrects the producer contract and repairs only recoverable records. Replay retains the event ID so a previously completed external effect is not repeated.
+T: Immediate rejection is suitable for invalid synchronous requests. DLQs preserve asynchronous evidence. Unlimited retries may eventually handle outages but waste capacity on permanent errors. Some ordering requirements mean skipping one record must pause its entity stream rather than silently advance.
+F: A DLQ without an owner becomes a hidden data-loss sink. Bulk replay during peak traffic causes another outage. Track terminal outcomes separately from merely moving messages, and define retention and deletion policy.
+D: Redrive can reorder messages relative to newer events. Compare entity versions or reconcile from authoritative state. If a failed payment event is replayed days later, its business intent may have expired even though the message is technically valid.
+X: Fail a job three times and inspect its terminal metadata. Correct a compatible payload and replay at a bounded rate. For an ordered inventory stream, explain whether to pause the key or rebuild its projection from the source of truth.
+V: Processing fails|Classify and count attempts|Retry still useful?|Schedule retry|Move to DLQ with evidence|Repair and controlled replay|Confirm business resolution
+R: 15,16,82,109
+L: messaging.py
+@@21|Cron Jobs
+E: Cron-style scheduling starts work according to time rules. ShopStream needs periodic reconciliation, expired-reservation cleanup, and reports. Scheduling decides when to attempt work; it does not guarantee one successful execution per business period.
+A: An alarm clock tells a student when to study. A missed alarm does not prove the lesson happened, and two alarms can ring for the same session. A durable completion record is the equivalent of a study log.
+M: Evaluate the schedule in an explicit timezone, create a run identity from job and business interval, acquire bounded ownership, and record completion. Define overlap, missed-run, retry, and catch-up behavior. Use idempotent database changes and checkpoints for long scans. Separate scheduled time from actual start and completion time.
+W: A daily settlement job uses business date 2026-10-18 as its unique key. Two scheduler instances race, but a database uniqueness constraint allows one logical settlement. A crash resumes from a checkpoint; a duplicate trigger reads the existing run status.
+T: Fixed-interval timers are useful for local maintenance; durable schedulers recover missed runs. Event-triggered work is fresher but needs reliable event production. Cron expressions differ across implementations, including field count and timezone support.
+F: Local daylight-saving changes can skip or repeat wall-clock times. A job taking longer than its interval overlaps. Treating process exit zero as proof of correct output hides empty or partial results. Monitor freshness and expected row counts.
+D: A distributed lease alone does not prevent a paused old worker from continuing after expiry. Use fencing or idempotent writes scoped to the run ID. Catch-up policies should cap backlog so recovery does not launch hundreds of expensive scans simultaneously.
+X: Simulate two triggers for one date and assert one result. Interrupt a paginated cleanup after its first checkpoint. Specify whether three missed daily runs should run separately, merge into one interval, or require manual reconciliation.
+V: Schedule becomes due|Create business run ID|Run already completed?|Skip duplicate trigger|Claim bounded ownership|Execute with checkpoints|Record completion or retry
+R: 14,38,96
+L: messaging.py
+@@22|WebSockets
+E: WebSockets provide a long-lived bidirectional message channel. ShopStream support chat needs both browser messages and immediate agent replies without opening a new HTTP request for every update. Persistent connections shift work from request routing to connection lifecycle management.
+A: A telephone conversation lets both people speak over one established call. A dropped call loses the live channel, but it should not erase the conversation history stored elsewhere.
+M: Establish an authenticated HTTP upgrade where applicable, then exchange framed messages. Maintain per-connection state, heartbeats, bounded send buffers, and idle deadlines. Persist important messages with sequence IDs before acknowledging them. Reconnect with a resume cursor and deduplicate retransmissions. Route users to connection-owning servers through a shared messaging layer when scaling.
+W: A browser sends chat message M with client ID C. The server persists M, acknowledges C, and delivers it to the agent. The connection drops before acknowledgment reaches the browser. On reconnect, resending C returns the stored message rather than creating a duplicate.
+T: SSE suits server-to-browser streams with simpler HTTP semantics. Long polling works through more intermediaries but repeats request overhead. WebSockets support two-way interaction but need custom delivery, flow-control, and reconnection contracts above the transport.
+F: Unbounded buffers let a slow client exhaust memory. Authentication at connection start can outlive revoked permission. Validate Origin for browser connections, authorize each channel, and define how token expiry affects an established session.
+D: A load balancer distributes connections, not necessarily messages. Ten busy chat rooms can overload one host while others are idle. Measure active connections, message rate, bytes, buffer age, and reconnect storms; drain connections during deployments with resumable state.
+X: Specify message IDs and acknowledgments for chat. Simulate reconnect after persistence but before acknowledgment. Design a slow-consumer policy that bounds memory and explains which messages may be dropped versus recovered from history.
+V: Client connects|Authenticate and authorize channel|Connection healthy?|Exchange framed messages|Reconnect with cursor|Persist and acknowledge|Close or resume safely
+R: 23,24,43,44
+L: protocols.py
+@@23|Long Polling
+E: Long polling holds an HTTP request until an update arrives or a server timeout ends it. A client then immediately asks again. It provides near-real-time updates when a permanently streaming protocol is inconvenient, while retaining ordinary request-response behavior.
+A: A customer asks a receptionist to wait briefly for a parcel before answering. If nothing arrives, the customer asks again. The gap between questions can miss notifications unless the receptionist keeps a durable numbered log.
+M: Send a last-seen cursor, register a bounded waiter, check for newer events without a race, and return events or an empty timeout response. The client advances its cursor only after processing. On disconnect, remove the waiter. Set proxy timeouts longer than the polling interval and use retry jitter after failures.
+W: The browser asks for events after 120. Event 121 arrives and the server responds immediately. The next request asks after 121. If event 122 arrives between requests, persistent history returns it on the next poll rather than losing it.
+T: Short polling is simpler but adds latency or excessive requests. Long polling reduces empty requests but occupies connection and waiter resources. SSE avoids repeated setup for a one-way stream; WebSockets enable bidirectional messages.
+F: Keeping only ephemeral notifications loses updates in the reconnect gap. Holding a database transaction open for the whole poll ties up connections. Use asynchronous waiting and short database reads, with bounded cursors and retention.
+D: At 50,000 clients and a 25-second empty-poll interval, an idle system still handles about 2,000 polls/second, excluding connection overhead. Event fanout can cause synchronized re-polling, so introduce careful jitter while preserving the product's latency target.
+X: Deliver an event between successive requests and verify the cursor recovers it. Expire a cursor beyond retention and return a resynchronization response. Estimate idle poll throughput for a chosen client count and timeout.
+V: Poll with last cursor|Check event history|New event available?|Return next events|Wait until event or timeout|Release waiter resources|Client polls again
+R: 11,22,24
+L: protocols.py
+@@24|Server-Sent Events
+E: Server-sent events stream text events from a server to a browser over HTTP. ShopStream can push order-status updates while the browser continues to use normal HTTP requests for commands. SSE is naturally one-way, which simplifies many notification interfaces.
+A: A radio station broadcasts updates while listeners use another channel to call in. Tuning back in does not recover missed news unless the station keeps an archive indexed by event number.
+M: Return text/event-stream, format events with data fields and optional IDs, terminate each event with a blank line, and flush intentionally. Heartbeat comments keep intermediaries from considering an idle stream dead. Use Last-Event-ID or an explicit cursor to replay retained events, and disable unwanted proxy buffering. Bound per-client pending output.
+W: The server emits id: 42 and data containing shipped status. After a disconnect, the browser reconnects with the last received ID. The server checks retention and sends later events; if history expired, it instructs the client to fetch a fresh order snapshot.
+T: SSE is convenient for one-way status and token streams. WebSockets provide richer two-way interaction. Streaming a model response improves perceived responsiveness, but time to first token and total completion latency remain distinct metrics.
+F: Writing bytes without correct blank-line framing leaves the browser waiting. Proxy buffering can make a stream arrive all at once. Native EventSource authentication options differ from arbitrary fetch requests; avoid exposing long-lived bearer tokens in URLs.
+D: A disconnected client may stop reading while server computation continues. Propagate cancellation where safe and account for already-consumed inference work. Events are not durable merely because they were written to a socket; acknowledgments or replay contracts define delivery semantics.
+X: Parse the supplied event stream and verify IDs and multiline data. Simulate a reconnect using a retained cursor. Design a streamed inference contract that reports partial failure after headers have already committed a successful HTTP status.
+V: Browser opens stream|Authenticate and set headers|Client can receive?|Send framed event and ID|Cancel or bound backlog|Heartbeat and retain cursor|Reconnect and replay
+R: 22,23,44,89
+L: protocols.py
+@@25|Database Indexing
+E: An index is a searchable structure that helps a database find rows without examining every row. ShopStream often searches orders by customer and creation time. A suitable index reduces examined data, but every insert and update must maintain it.
+A: A library catalog maps authors and titles to shelf positions. A catalog ordered by author then title is useful for author searches, but not equally useful for every title-only search. Physical access patterns and database optimizers add nuances beyond the analogy.
+M: B-tree indexes organize sorted keys in balanced pages, supporting equality, ranges, and ordering. Hash indexes target equality. A composite index on customer_id, created_at can narrow by customer and scan a date range. Selectivity, statistics, table size, correlation, and visibility influence whether the planner chooses it. Covering indexes can reduce heap access when visibility permits.
+W: Query orders for customer 7 ordered by created_at descending with LIMIT 20. Compare a sequential scan plus sort with an index on customer_id, created_at DESC. Inspect estimated and actual row counts and buffer reads; do not infer speed solely from the word Index in the plan.
+T: More indexes improve selected reads but increase writes, storage, vacuum work, and cache pressure. Partial indexes cover a predicate such as pending orders. Expression indexes support a matching expression. Small tables or broad scans may favor sequential access.
+F: Indexing every column wastes resources. Wrapping a column in an unmatched function can defeat the intended access path. Composite key order should follow query patterns, while acknowledging engine-specific skip-scan and planner behavior.
+D: Index-only scans still depend on visibility information and may visit heap pages. A production index build can lock or consume significant I/O; choose a supported concurrent strategy and monitor progress. Constraints and performance indexes have different correctness roles even when both use indexes internally.
+X: Run the PostgreSQL query-plan lab on generated orders. Compare plans before and after an index, without promising a fixed speedup. Add a low-selectivity predicate and explain why the planner may still choose a sequential scan.
+V: SQL predicate received|Estimate rows and access cost|Index path cheaper?|Traverse selected index|Scan relevant table pages|Apply filters and ordering|Return matching rows
+R: 26,27,31,81
+L: database.sql
+@@26|Query Optimization
+E: Query optimization reduces the work needed to produce a correct database result. ShopStream's order page may be slow because it scans too much data, joins inefficiently, waits for locks, or transfers oversized results. The first task is locating the actual cost.
+A: Planning a delivery route avoids repeatedly crossing the city. The shortest map route is not always fastest during traffic. A query plan likewise depends on data distribution, cached pages, concurrency, and estimates.
+M: Capture a representative slow query and parameters. Inspect EXPLAIN estimates, then EXPLAIN ANALYZE and buffer statistics safely because ANALYZE executes the statement. Compare estimated rows to actual rows, examine loops, sort spills, joins, and I/O. Update statistics, rewrite predicates or joins, add appropriate indexes, and remeasure under representative load.
+W: A nested loop predicts ten outer rows but receives 100,000. Its inner lookup runs 100,000 times. Better statistics or a changed query may select a hash join. A LIMIT helps only if the plan can avoid doing all upstream work first.
+T: Optimizing one query may increase write cost or memory use. Denormalization can reduce joins but introduces update consistency. A cached result avoids repeated work but changes freshness. Choose the smallest change that meets the workload target.
+F: EXPLAIN costs are not milliseconds. Running ANALYZE on destructive statements in production can modify data. Low CPU does not mean a query is fast: locks, disk, network, or pool waits can dominate.
+D: Parameter-sensitive distributions can make a plan good for common customers and terrible for a large tenant. Test representative skew, not just average inputs. Separate application pool acquisition from database execution and inspect wait events before adding hardware.
+X: Compare estimated and actual rows in the SQL lab. Change the data distribution and refresh statistics. Investigate a low-CPU/high-latency query by gathering locks, wait events, disk latency, and pool occupancy before choosing an optimization.
+V: Slow query observed|Capture plan and waits|Estimate matches reality?|Optimize measured bottleneck|Refresh statistics and inspect skew|Benchmark representative workload|Keep or revert change
+R: 25,27,28,91
+L: database.sql
+@@27|N+1 Queries
+E: N+1 occurs when one query fetches a list and another query runs for each list item. ShopStream retrieves 100 orders, then separately fetches the customer for every order. Even fast queries accumulate network round trips and connection work.
+A: A librarian brings a reading list, then walks to the shelves once for each book. Collecting related books in a planned trip is more efficient, but carrying an unlimited pile is also impractical.
+M: Instrument query count per request. Identify lazy relationship loading inside loops. Replace it with a join, eager loading, or a bounded batch keyed by required IDs. Reconstruct results using a map. Preserve pagination and authorization; a large join can duplicate parent rows and produce a Cartesian explosion.
+W: A page uses one order query plus 100 customer lookups. Assuming 4 ms per serial round trip, network delay alone approaches 404 ms. A two-query batch reduces the number of round trips to two, though actual execution and transfer costs still need measurement.
+T: Joins let the database optimize relationships. Batched loading is useful across service boundaries or for several independent collections. Eager-loading everything can overfetch, so request only fields and relationships the page needs.
+F: Caching masks N+1 in warm tests but leaves cold requests slow. A global loader can leak data across tenants. Scope loaders to the request or correctly keyed authorization context and enforce maximum batch sizes.
+D: Parallelizing 100 queries may lower one request's latency while exhausting the shared pool. The goal is reducing total work and round trips, not hiding them with concurrency. Track query count and rows returned as regression indicators in integration tests.
+X: Count queries for 1, 10, and 100 parent rows; linear growth reveals the pattern. Replace per-row access with a batch and verify constant query count. Add two one-to-many joins and explain duplicated rows and pagination errors.
+V: Fetch parent list|Inspect relationship access|One query per item?|Collect IDs and batch|Use existing bounded query|Map related rows|Return authorized page
+R: 25,26,28
+L: database.sql
+@@28|Connection Pooling
+E: A connection pool reuses a bounded set of database connections. Establishing a connection costs work, and databases cannot serve unlimited sessions efficiently. ShopStream needs enough connections for useful concurrency while keeping demand below database capacity.
+A: A company shares a fleet of cars. Borrowers wait when all cars are in use, and cars must be returned even if a trip fails. Buying more cars cannot widen a congested road.
+M: Acquire a connection with a timeout, execute a short transaction, commit or roll back, and release in a guaranteed cleanup path. Validate stale connections and reset session state where required. Size all application pools together, including rolling-deployment overlap and background workers. Observe acquisition wait separately from query time.
+W: Ten replicas each allow 20 connections, reserving 200 database sessions before workers or administration. Doubling replicas doubles possible sessions. If the database safe budget is 150, autoscaling can cause connection failure despite reducing per-pod CPU.
+T: Session pooling preserves connection-specific state. Transaction pooling improves multiplexing but constrains session features and requires driver compatibility. Pool size is a concurrency limit, not a throughput promise; long transactions reduce useful reuse.
+F: Leaked connections eventually block every caller. Holding connections while calling payment APIs wastes scarce capacity. Per-request pool creation defeats reuse. Log acquisition timeout counts and inspect oldest transactions before simply increasing limits.
+D: A pool can protect the database by moving waiting into the application, but the waiting queue must also be bounded. Little's Law relates average in-use connections to transaction rate times connection hold time. Use measured hold time and test under skewed slow queries.
+X: Calculate the maximum aggregate connection count during a 25% rollout surge. Inject an exception and verify release. Simulate a slow query and compare acquisition wait with execution latency while maintaining a fixed database session budget.
+V: Request needs database|Acquire bounded pool slot|Slot before deadline?|Run short transaction|Reject or defer request|Commit or roll back|Release connection
+R: 11,26,44,45
+L: concurrency.py
+@@29|Read Replicas
+E: A read replica serves a copy of database data to offload reads. ShopStream can send product browsing and reporting to replicas while writes go to the primary. Replication lag means a successful write may not immediately appear on a replica.
+A: Branch libraries receive copies of a central catalog. A newly added book may be visible centrally before branch copies update. A copy is useful only if its freshness matches the reader's purpose.
+M: The primary writes a replication log. Replicas receive and apply it, potentially at different rates. Route eligible reads to a replica and correctness-sensitive reads to the primary or a replica confirmed to have reached a required log position. Measure receive lag and replay lag, not just network connectivity.
+W: A customer creates order O, then refreshes the order page. A replica 500 ms behind returns no order. Route that read to the primary or use a session consistency token until the replica catches up, rather than displaying a false failure.
+T: Replicas scale some reads and support recovery but do not generally increase primary write throughput. Synchronous acknowledgment can reduce certain data-loss windows at added latency and availability cost; exact guarantees depend on which replication stage is acknowledged.
+F: Round-robin reads can make a user see data go backward. Long analytical queries may interfere with replay or be canceled depending on the database. Replication copies accidental deletion, so it is not a substitute for backups.
+D: Promoting a lagging replica can lose acknowledged writes under asynchronous replication. Fence the old primary before accepting new writes and reconcile timelines. Read routing, failover, and recovery point objectives must be designed together.
+X: Write then immediately read from a delayed replica simulation. Add a primary-read fallback for the user's own new order. Describe which evidence proves a candidate replica has all required committed transactions before promotion.
+V: Read request|Determine freshness requirement|Replica sufficiently current?|Read from replica|Read primary or wait boundedly|Validate session position|Return consistent-enough view
+R: 32,35,83,85
+L: algorithms.py
+@@30|Sharding
+E: Sharding splits a dataset across independently hosted partitions. ShopStream may outgrow the storage or write capacity of one database server. A shard key determines where each record lives and which requests require cross-shard work.
+A: A university divides students among administrative offices. Assigning by department makes departmental tasks local but can overload the largest department. Every division rule favors some access patterns and complicates others.
+M: Choose a key aligned with common transactions, map keys to shards through ranges, hashes, or a directory, and route requests accordingly. Track ownership during rebalancing. Copy data, catch up changes, fence old ownership, switch routing, and verify counts before retiring the old copy. Plan global IDs and cross-shard queries explicitly.
+W: Hash tenant ID across four shards. Most tenants distribute evenly, but one giant tenant remains a hot shard. Subsharding that tenant by entity may spread writes while making tenant-wide transactions and reports more expensive.
+T: Replication copies the same data; sharding divides it. Native table partitioning may remain inside one database system. Sharding improves capacity but adds routing, rebalancing, cross-shard transactions, backups, and operational complexity.
+F: A timestamp key concentrates new writes in the newest range. Modulo N routing remaps many keys when N changes. Avoid introducing sharding solely because it sounds scalable; first measure indexes, query shapes, vertical capacity, and archival options.
+D: Rebalancing is a distributed state transition, not merely copying rows. A stale router can write to the old shard after cutover. Use ownership epochs or another fencing scheme and reconciliation to prevent divergent writable copies.
+X: Distribute sample tenant keys and measure skew. Add one hot tenant and show why uniform hashing cannot split that tenant automatically. Design migration states with a clear single-writer cutover and rollback boundary.
+V: Data operation|Extract shard key|Ownership known and current?|Route to owning shard|Refresh routing or fail safely|Execute local transaction|Merge only necessary results
+R: 31,32,38,46
+L: algorithms.py
+@@31|Partitioning
+E: Partitioning divides a logical table or dataset into smaller pieces using a rule. ShopStream can separate orders by month for pruning and retention. The term does not by itself imply different servers; many partitions can share one database host.
+A: A filing cabinet uses drawers labeled by year. Opening only the relevant drawer reduces search work. All drawers still share the same room, so partitioning alone does not enlarge the building.
+M: Define range, list, or hash bounds, route inserts, and let queries prune irrelevant partitions when predicates expose the partition key. Create suitable indexes on partitions and automate future partition creation. Coordinate unique constraints and foreign keys with database-specific partition rules. Detach or archive old partitions under a controlled retention procedure.
+W: A query for orders in October can scan that month's partition instead of years of history. A query that omits created_at may still touch every partition. Dropping an old partition makes retention efficient but must respect financial and product retention requirements.
+T: Partitioning improves manageability and some query patterns. Sharding distributes storage ownership across nodes. Over-partitioning increases planning and catalog overhead; too few large partitions reduce pruning and maintenance benefits.
+F: Missing the next month's partition can reject inserts. Applying a transformation that hides the partition predicate may prevent pruning. A unique order ID constraint may require including the partition key or another database-specific design.
+D: Partition choice encodes lifecycle assumptions. Late-arriving data, corrected timestamps, and legal holds complicate deletion. Test boundary timestamps in UTC and confirm row movement behavior when a partition key changes.
+X: Create monthly partitions in the SQL lab and inspect pruning. Insert a boundary-date order and verify routing. Design an archival process that validates backup readability and legal retention before detaching old data.
+V: Query or insert|Evaluate partition key|Matching partition exists?|Route or prune partitions|Reject or create controlled partition|Apply local indexes and constraints|Return or archive data
+R: 25,30,81,84
+L: database.sql
+@@32|Replication
+E: Replication maintains copies of data on multiple machines. Copies can improve read capacity and survival of machine failure, but they must agree about accepted writes. ShopStream's durability depends on when a write is acknowledged and which copies contain it.
+A: Several clerks maintain ledgers from one official journal. Copies protect against a lost notebook, but copying a mistaken entry spreads the mistake. Independent clerks accepting incompatible edits need a conflict rule.
+M: Capture committed changes in a log, transmit them, apply them in order within the guaranteed domain, and track durable progress. Leader-follower replication has one write authority. Multi-leader systems allow several writers and need conflict handling. Quorum systems require defined read/write protocols; R+W>N alone does not prove linearizability without additional conditions.
+W: A primary acknowledges after its local durable write while a follower is disconnected. If the primary is lost before replication, promotion may omit that write. Waiting for a synchronous durable replica narrows the loss window but can block writes when that replica is unavailable.
+T: Synchronous and asynchronous replication trade acknowledgment latency, availability, and possible data loss. Replication is not backup because corruption and deletion propagate. Logical replication and physical replication operate at different abstraction levels and support different compatibility constraints.
+F: Assuming every copy is current creates stale reads. Promoting without fencing creates two writers. Measuring only bytes sent ignores unapplied backlog. Track durable receive and apply positions and test recovery, not merely steady-state synchronization.
+D: Data-center diversity protects against some correlated failures but adds network delay and operational differences. Acknowledged durability depends on storage behavior, replication mode, membership changes, and failure assumptions. State those assumptions whenever advertising zero data loss.
+X: Pause replication, commit a write, and inspect divergence in a simulation. Compare acknowledgment policies. Design a failover drill that verifies fencing, committed record counts, and recovery of clients with stale connections.
+V: Leader commits change|Append and transmit log|Required acknowledgments reached?|Acknowledge according to policy|Wait or fail within deadline|Replica applies ordered changes|Track durable progress
+R: 29,33,35,84
+L: algorithms.py
+@@33|Leader Election
+E: Leader election chooses a coordinator among replicas. ShopStream's replicated metadata service needs one authority for ordering changes. Detecting silence is not proof of failure, so safe election must handle delayed messages and partitioned nodes.
+A: A committee elects a chair with a majority vote. A chair isolated from the committee cannot keep making binding decisions alone. Software additionally needs numbered terms to reject messages from an old chair.
+M: In a quorum-based consensus protocol, nodes use election timeouts, increasing terms, durable votes, and log freshness checks. A majority elects a leader; overlapping majorities prevent two independent majorities for the same membership. The leader replicates entries and commits according to protocol rules. Old leaders must lose authority and external resources may need fencing tokens.
+W: Five nodes split into groups of three and two. Only the group of three can form a majority and make progress under the assumed protocol. The isolated old leader may still run, but its term or fencing token must prevent stale external writes.
+T: A coordination service can provide election primitives, but a simplistic lock is not a complete consensus algorithm. Majority availability tolerates at most two unavailable nodes out of five; it does not protect against every correlated failure or Byzantine behavior.
+F: Electing the node with the fastest clock is unsafe. Short timeouts cause election churn under pauses. Changing membership without a safe protocol can destroy quorum intersection. Use established implementations and test network delay and restart behavior.
+D: Safety means conflicting decisions are not committed; liveness means progress eventually occurs under stated conditions. A protocol can preserve safety while unavailable. Leader leases require bounded clock assumptions; term-based log protocols and external fencing address different hazards.
+X: Enumerate all majorities of three nodes and show intersection. Partition a five-node diagram into 3/2 and mark where writes may succeed. Describe how a paused former leader is rejected after a new term begins.
+V: Heartbeat missing|Start term and request votes|Majority with valid log?|Become leader|Remain follower or retry|Replicate and fence old authority|Commit with quorum
+R: 32,34,38,95
+L: algorithms.py
+@@34|CAP Theorem
+E: CAP explains a limit during a network partition: a distributed service cannot guarantee both linearizable behavior and a response for every request to a nonfailed node under the theorem's assumptions. It is not a permanent menu where every database simply picks two letters.
+A: Two bank branches lose their communication link. If both promise an immediately current shared balance, neither can safely invent what the other accepted. They must restrict some operations or permit observations that do not behave like one instantaneously shared register.
+M: Model a register with reads and writes. Partition communication between replicas. A write accepted on one side cannot be communicated to the other. The other side must either delay/reject a read that requires the new value or answer without guaranteeing linearizability. Specify which operations remain available and what consistency model they actually provide.
+W: Region A accepts setting stock to zero while B is isolated. B cannot both answer every read immediately and guarantee it returns the latest globally ordered value. For checkout, refuse unsafe reservations; for catalog descriptions, accept a stale read if the product contract allows it.
+T: CAP consistency means linearizability, not every possible meaning of consistency or ACID's C. CAP availability is a formal response property, not a monthly uptime percentage. Outside partitions, latency and consistency trade-offs still matter but are not the same theorem.
+F: Saying a system is CA because partitions are rare ignores the failure case. Saying eventual consistency means random corruption is also wrong; convergence needs explicit replication and conflict-resolution behavior.
+D: Many systems make different choices per operation. A shopping site can serve cached descriptions while blocking checkout for an uncertain inventory owner. Explain the partition, read/write contract, and failure response before applying labels such as CP or AP.
+X: Draw a two-region partition and place one write on A. List possible B responses and which guarantee each gives up. Design separate browsing and purchase contracts with clear user-visible degraded behavior.
+V: Replicas lose communication|Identify operation guarantee|Requires linearizable result?|Wait or reject without quorum|Serve permitted weaker view|Reconcile after partition|Restore normal contract
+R: 33,35,86,95
+L: algorithms.py
+@@35|Eventual Consistency
+E: Eventual consistency allows replicas to differ temporarily but requires convergence under appropriate delivery and update assumptions. ShopStream's search index may show a product update after a delay. The acceptable delay and behavior during it are product requirements, not implementation trivia.
+A: Classmates share corrected lecture notes over time. If all corrections arrive and conflicts have a common rule, their notes converge. Merely exchanging pages does not ensure agreement when edits conflict.
+M: Propagate changes through logs or events, identify entities and versions, apply a defined merge rule, and repair missed updates. Provide idempotent processing and ordered application where required. Define read-your-writes or monotonic-read guarantees separately; eventual convergence alone supplies neither. Monitor lag and convergence failures.
+W: Product price version 8 reaches search after version 9 because one delivery was delayed. Applying every arrival blindly reverts the index. Compare entity versions and discard version 8, or rebuild the projection from the authoritative row.
+T: Stronger consistency simplifies some reasoning but may add coordination latency or reduce availability under partition. Eventual consistency suits projections and tolerant reads. Inventory deductions and financial invariants require stronger protection or carefully designed reservations and reconciliation.
+F: Last-write-wins based on unsynchronized wall clocks can lose a valid update. No specified conflict rule means no justified convergence claim. A queue that is permanently growing violates practical freshness even if eventual delivery is theoretically possible.
+D: CRDTs converge by carefully designed merge algebra under stated assumptions, not by making all business operations commutative. Deletions need tombstones or comparable metadata until old copies cannot resurrect data. Retention and repair policy are part of correctness.
+X: Deliver versions 1, 3, 2 and verify the projection ends at 3. Simulate a missed event and rebuild from a snapshot. Specify a maximum tolerated search lag and an alert based on event age rather than process health.
+V: Change committed|Propagate versioned update|Update newer or mergeable?|Apply deterministic merge|Ignore stale or quarantine conflict|Repair missed changes|Converge under assumptions
+R: 16,29,32,96
+L: messaging.py
+@@36|Optimistic Locking
+E: Optimistic locking lets concurrent readers proceed, then checks whether data changed before accepting a write. ShopStream editors can update product descriptions without holding database locks while thinking. A version comparison prevents silently overwriting another editor's work.
+A: Two students edit copies of a report with revision number 7. The first publishes revision 8. The second must compare changes rather than replacing the newer report with an old copy.
+M: Read a row and version, compute the proposed change, then atomically UPDATE with WHERE id=? AND version=old_version while incrementing the version. One affected row means success; zero means conflict or absence. Reload and merge or ask the user to resolve. For HTTP, ETag with If-Match can expose similar precondition semantics.
+W: Both editors read version 4. Alice updates successfully to 5. Bob's conditional update using 4 affects zero rows. Returning 409 or 412 under the chosen API contract is safer than silently retrying his old full replacement against version 5.
+T: Optimistic checks work well with infrequent conflicts and short write operations. Pessimistic locking may be simpler for high-contention critical sections. A single-row version check does not automatically protect a multi-row business invariant.
+F: Reading then writing the version in separate unguarded operations races. Automatically retrying every user edit can erase intentional conflict detection. Distinguish retryable computation from changes requiring human or domain-specific merge decisions.
+D: Write skew can occur when two transactions read overlapping constraints but update different rows. Protect the invariant with serializable transactions, explicit locking of a shared guard, or an appropriate database constraint. The correct choice follows the invariant, not the popularity of version columns.
+X: Run two updates against the same version and assert one success. Add If-Match semantics to an edit API. Design a two-doctor on-call invariant and explain why separate row versions do not ensure one doctor remains on duty.
+V: Read row and version|Compute change|Version still matches atomically?|Commit and increment version|Reload or report conflict|Return new version|Preserve invariant
+R: 37,39,81,102
+L: orders.py
+@@37|Pessimistic Locking
+E: Pessimistic locking reserves access before changing shared data. ShopStream can lock an inventory row while deciding whether stock remains. Competing transactions wait or fail according to policy, making some critical sections easier to reason about.
+A: A clerk takes the only key to a stockroom while counting and allocating goods. Others wait. Holding the key while phoning an unrelated supplier unnecessarily blocks everyone else.
+M: Start a transaction, acquire the required row locks such as SELECT FOR UPDATE, inspect current values, perform changes, and commit promptly. Use a consistent lock order and bounded lock waits. Locks are released at transaction end. MVCC means ordinary readers may still see snapshots; a row lock does not necessarily block every read.
+W: Stock is one. Transaction A locks the row, decrements to zero, and commits. B waits, then observes zero and rejects its purchase. An atomic conditional UPDATE can achieve the same narrow invariant without a separate read-then-lock sequence.
+T: Locking prevents certain concurrent interference but adds waiting and deadlock risk. Optimistic checks avoid waiting until conflict detection. Serializable isolation addresses broader anomalies, while explicit row locks protect only the objects and operations actually covered.
+F: Calling a payment provider while holding inventory locks creates long contention chains. Locking rows in opposite orders permits deadlocks. Use short local transactions and reservations for workflows that involve external services.
+D: SKIP LOCKED is useful for competing job workers but intentionally gives an incomplete view of locked rows; it is not a general correctness fix for financial queries. Fairness and starvation need observation when frequently skipping busy records.
+X: Use two SQL sessions to reserve the last unit. Reverse lock order on two rows to reproduce a deadlock in an isolated lab. Replace the long transaction with an expiring reservation and define safe expiry reconciliation.
+V: Begin transaction|Acquire required locks|Lock before deadline?|Read and modify protected rows|Abort or retry safely|Commit promptly|Release all transaction locks
+R: 18,36,39,40
+L: database.sql
+@@38|Distributed Locks
+E: A distributed lock coordinates exclusive work across processes or machines. ShopStream might use one to prevent overlapping reconciliation runs. Network delays and process pauses make ownership uncertain, so a lease alone is not proof that old work has stopped.
+A: A time-limited equipment rental expires, but the renter might still hold the equipment. A new renter needs a way to reject actions from the expired holder. Fencing tokens provide that additional control.
+M: Acquire ownership atomically with a unique owner ID and expiry. Renew before expiry under a bounded policy. Release only if the stored owner still matches. Issue a monotonically increasing fencing token and require the protected resource to reject older tokens. Use monotonic elapsed time locally and understand the lock service's consistency guarantees.
+W: Worker A holds token 8 and pauses. Its lease expires; B acquires token 9 and writes. A resumes with token 8. The storage layer rejects A's write because 8 is older than the last accepted token, preventing stale-owner damage.
+T: A database transaction or unique constraint often protects an invariant more directly. Distributed locks help coordinate external work but add a dependency and subtle failure modes. Fencing is effective only if the actual protected resource enforces it.
+F: Unconditionally deleting a lock can remove another worker's renewed ownership. Assuming a lease expiry kills the old process is unsafe. Clock drift and long garbage-collection pauses invalidate casual timing assumptions.
+D: Some external APIs cannot enforce fencing. Then design idempotent effects, durable operation IDs, and reconciliation rather than claiming perfect mutual exclusion. Lock availability during a partition must be chosen consistently with the safety requirements of the resource.
+X: Simulate A pausing past lease expiry and B taking over. Reject A's stale token in a ledger. Explain why a lock around an email send cannot guarantee one email if the provider neither deduplicates nor honors fencing.
+V: Worker requests ownership|Acquire lease and fencing token|Lease valid for work?|Write with token validation|Stop or reacquire safely|Renew or compare-and-release|Reject stale owners
+R: 14,33,37,96
+L: concurrency.py
+@@39|Race Conditions
+E: A race condition occurs when correctness depends on the timing of concurrent operations. Two ShopStream requests can both read stock=1 and each sell the last unit. Every individual line can look reasonable while their interleaving violates the business rule.
+A: Two people see the final empty parking space and both begin entering it. Checking availability separately from occupying the space leaves a dangerous gap. The combined operation needs coordination.
+M: Identify shared mutable state and the invariant. Enumerate read-modify-write steps and possible interleavings. Protect the whole critical section with a suitable lock, atomic operation, database constraint, conditional update, or message ownership model. A process-local lock cannot coordinate separate application replicas.
+W: A reads 1, B reads 1, A writes 0, B writes 0. The final value looks valid but two sales occurred. UPDATE inventory SET stock=stock-1 WHERE stock>0 RETURNING stock makes admission and decrement one guarded database operation.
+T: Data races refer more narrowly to unsynchronized memory access under a language's memory model. Logical races can exist even with thread-safe containers and transactions. Idempotency handles repeated intent; concurrency control handles competing distinct intents.
+F: Testing only sequentially misses the bug. Adding sleep changes probability, not correctness. The Python interpreter's execution model does not make multi-step application invariants automatically atomic across threads, processes, or database calls.
+D: Deterministic barriers can force the harmful interleaving in a test. Record operation IDs and versions to reconstruct incidents. Choose the narrowest correct coordination boundary, then measure contention and ensure retries preserve the intended invariant.
+X: Force two readers to observe the same initial stock with a barrier. Demonstrate the lost-update schedule without relying on random timing. Replace it with a conditional update and assert that exactly one purchase succeeds.
+V: Concurrent requests arrive|Identify shared invariant|Operation protected atomically?|Apply coordinated update|Expose harmful interleaving|Check result and conflicts|Preserve valid state
+R: 14,36,37,43
+L: concurrency.py
+@@40|Deadlocks
+E: A deadlock is a cycle of operations waiting for resources held by one another. ShopStream transfers stock between two warehouses; one transaction locks A then B while another locks B then A. Neither can finish without intervention.
+A: Two delivery trucks meet in a narrow lane and each refuses to reverse. More engine power does not help. The system needs an ordering rule, a release, or a controlled retry.
+M: Build a wait-for graph: an edge points from a waiting transaction to the holder it needs. A cycle indicates deadlock for the modeled exclusive resources. Databases can detect cycles and abort a victim. Applications must roll back the entire failed transaction and retry only under a bounded safe policy. A consistent global lock order prevents many cycles.
+W: T1 owns row A and waits for B. T2 owns B and waits for A. The database aborts T2. T1 completes; T2 starts a fresh transaction with new reads and locks A before B, eliminating that cycle.
+T: A long lock wait is not necessarily a deadlock; its holder may eventually finish. Starvation is indefinite lack of progress without a cycle. Lock timeouts bound waiting but may abort useful work and do not explain the dependency chain.
+F: Retrying only the last SQL statement after transaction abort is incorrect. Ignoring lock order in rare maintenance code preserves the hazard. Capture deadlock diagnostics and query context without exposing sensitive parameters.
+D: Distributed workflows can deadlock outside a single database's detector. Service A waits for B while B waits for A through synchronous callbacks or exhausted pools. Draw both resource and call dependencies; local health checks can remain green while global progress stops.
+X: Construct the two-row cycle in an isolated database. Read the victim error and retry the full transaction. Draw a pool deadlock where all workers hold one resource while waiting for tasks that require those same workers.
+V: Operation waits for lock|Build wait-for dependencies|Cycle detected?|Abort selected victim|Continue bounded waiting|Release and retry whole transaction|Restore progress
+R: 28,37,39,43
+L: concurrency.py
+@@41|Memory Leaks
+E: A memory leak is retained memory that the program no longer needs. In garbage-collected applications, objects can still be reachable through caches, listeners, or globals and therefore never reclaimed. ShopStream may run normally for hours before memory pressure causes latency or termination.
+A: A storeroom keeps every obsolete receipt because nobody removes it from the filing list. A cleaner cannot discard items still marked as required. Garbage collection follows reachability, not business usefulness.
+M: Establish a steady workload and track heap, process resident memory, allocation rate, and object counts over time. Compare heap snapshots to find growing retainers. Inspect unbounded caches, subscriptions, queues, tasks, and native allocations. Fix lifecycle ownership and bounds, then repeat a soak test through several cleanup cycles.
+W: Each request appends its full payload to a global debug list. At an assumed 50 KB per request and 100 requests/second, retained payload grows about 5 MB/second before object overhead. Removing the reference or using bounded sampled metadata stops growth.
+T: A leak differs from a legitimate large working set, allocator fragmentation, or a temporary spike. A higher memory limit delays failure but does not fix unbounded growth. Profilers add overhead and may require controlled sampling in production.
+F: Watching only language heap misses native buffers and GPU allocations. Forcing garbage collection cannot reclaim reachable objects. Logging full request bodies can create both memory growth and privacy exposure.
+D: AI servers may retain tensors through computation graphs or per-request references; model weights themselves are an expected persistent working set. Separate host memory, device memory, and cache allocations. Compare steady-state bounds by model version and concurrency before labeling growth a leak.
+X: Run the bounded-versus-unbounded retention demo and compare traced allocations. Release references and collect again. Design a one-hour soak test with acceptance criteria for post-GC heap, resident memory, queue depth, and throughput.
+V: Memory rises over time|Measure heap and native usage|Growth exceeds expected working set?|Find retaining references|Confirm bounded workload behavior|Fix ownership or bounds|Repeat soak test
+R: 42,43,44,59
+L: concurrency.py

@@ -1,0 +1,276 @@
+@@60|Distributed Tracing
+E: Distributed tracing follows one operation through several components. ShopStream checkout crosses gateway, orders, inventory, and payment calls. A trace shows where elapsed time and errors occur across that path, rather than leaving each service's log isolated.
+A: A parcel carries a tracking ID while each depot records arrival and departure. The complete route reveals delays. Unlike a physical parcel, one request can split into parallel branches and asynchronous jobs.
+M: Create a trace with spans for meaningful operations. Propagate trace context through supported HTTP headers and message metadata, preserving parent-child or link relationships. Record start, duration, status, and bounded attributes. Export through a collector with batching and sampling. Distinguish remote parent input from trusted identity; trace IDs grant no authorization.
+W: A checkout trace totals 400 ms. Database work uses 30 ms, pool acquisition 200 ms, and payment 120 ms, with remaining overhead. Adding a span around pool wait reveals a bottleneck that a database execution span alone would miss.
+T: Metrics find population trends, logs explain events, and traces connect paths. Head sampling decides early and is cheap; tail sampling can retain interesting completed traces but needs buffering and coordination. Sampled traces are evidence, not a complete census.
+F: Missing propagation creates disconnected traces. Recording raw prompts or tokens as attributes leaks data. Subtracting cross-host timestamps without considering skew can invent negative durations; use local duration measurements and causal structure.
+D: Fanout means the slowest critical branch often controls total latency, while summed span durations may exceed wall-clock request duration. Async work needs links and business IDs because it may outlive the initiating request. Preserve sampling decisions consistently across services where feasible.
+X: Build a trace tree from the lab events and locate the critical path. Remove context on one hop and explain the gap. Design an inference trace with queue wait, preprocessing, model execution, and streaming phases without storing private input.
+V: Request enters service|Start span and propagate context|Downstream context preserved?|Link child work|Record broken correlation evidence|Export sampled spans|Inspect critical path
+R: 11,59,61,66,96
+L: performance.py
+@@61|Metrics
+E: Metrics summarize measurements over time. ShopStream needs rates, queue sizes, latency distributions, and resource saturation without reading every log. A metric must define its unit, labels, and aggregation semantics to support a correct conclusion.
+A: A scoreboard summarizes a match but does not replay every move. The score is useful only when everyone agrees which events count and which team they belong to.
+M: Use counters for cumulative events, gauges for current values, and histograms for distributions. Convert counters to rates while accounting for resets. Choose histogram boundaries around meaningful thresholds. Keep label cardinality bounded and consistent. Aggregate counts and bucket populations before calculating fleet-level proportions or percentiles.
+W: Over five minutes, 9,900 of 10,000 eligible requests succeed: success ratio is 99%. A latency histogram counts observations below each boundary. Two instances' P99 values cannot simply be averaged to obtain the service P99.
+T: Counters preserve event totals but need rate windows. Gauges show snapshots and can miss short spikes. Histograms support aggregate quantile estimation with bucket error; client-side summaries have different aggregation limits. Exact behavior depends on the telemetry implementation.
+F: User IDs as labels create a time series per user and can exhaust storage. A ratio without matching numerator and denominator filters is misleading. Choosing only mean latency hides tails and workload mix changes.
+D: Instrument accepted, rejected, retried, and completed work separately. Inference metrics should distinguish requests, input/output tokens, batches, and useful completions; one request can have vastly different resource cost from another. Use exemplars or trace links for detailed investigation where supported.
+X: Compute success ratio and retry amplification from lab counters. Merge two histograms before estimating a percentile. Design bounded labels for service, route template, status class, model version, and region without user identifiers.
+V: Observe event or value|Select counter gauge or histogram|Labels bounded and units clear?|Record measurement|Correct schema before export|Aggregate compatible populations|Compute meaningful indicator
+R: 58,60,63,64,93
+L: performance.py
+@@62|Alerts
+E: An alert asks a person or automation to act on a condition. ShopStream should page when users face significant harm requiring urgent response. Every unusual graph movement is not an emergency, and noisy pages make real failures harder to detect.
+A: A smoke alarm should detect dangerous smoke, not ring whenever someone makes tea. Sensitivity and actionability must be balanced, and the alarm itself needs testing.
+M: Define the symptom, affected population, severity, threshold, time window, owner, and runbook. Use sustained conditions and multiple windows where appropriate. Route urgent user-impacting alerts to on-call, slower trends to tickets, and diagnostic details to dashboards. Deduplicate related alerts and resolve them based on observed recovery.
+W: A 99.9% success SLO permits 0.1% bad requests. A 1% bad-request rate burns budget at 10 times the allowed rate. A fast and a slow window both showing high burn provide stronger paging evidence than a single transient spike.
+T: Symptom alerts reveal user impact. Cause alerts help diagnose resources but can page unnecessarily when redundancy works. Static thresholds are understandable; anomaly detection can catch unusual changes but needs explanation and false-positive control.
+F: Paging on every CPU spike creates fatigue. Missing-data behavior must be explicit; no samples are not zero errors. Alerts without an owner or safe first action waste response time.
+D: Low-traffic services need careful statistical treatment because one failure can produce a huge ratio. Combine absolute counts, synthetic checks, and business criticality without hiding important rare transactions. Review alert precision and missed incidents after each event.
+X: Write a page and a ticket condition for checkout. Compute burn rate from a chosen SLO. Test an alert with missing data, low traffic, and a short spike; document expected firing and clearing behavior.
+V: Evaluate indicator window|Check threshold and evidence|Urgent actionable impact?|Page accountable responder|Create ticket or observe|Deduplicate and attach runbook|Confirm recovery before close
+R: 58,63,64,65,110
+L: performance.py
+@@63|SLOs
+E: A service level objective is a measurable target for user-facing service behavior over a defined window. ShopStream might target 99.9% successful eligible checkout requests over 30 days. The target creates a shared basis for reliability decisions rather than demanding perfection without limits.
+A: A delivery company promises a defined proportion of eligible parcels within a time limit. The promise needs a clear clock, denominator, exceptions, and measurement process to mean anything.
+M: Identify a user journey, choose an SLI, define good and eligible events, set the target and window, and document exclusions narrowly. Review whether telemetry measures the user experience. Attach an error-budget policy with actions when reliability degrades. Keep contractual SLA consequences distinct from internal SLO targets.
+W: With one million eligible requests and a 99.9% objective, at most 1,000 may be bad within the window. If 800 are already bad, 200 remain under a request-based budget; this is not automatically equivalent to a fixed number of downtime minutes.
+T: Tighter targets can require more redundancy, slower changes, and higher cost. A latency SLO and an availability SLO measure different outcomes. Internal dependencies may need stricter targets than the end-to-end service, but correlated failures defeat simple multiplication assumptions.
+F: Excluding all overloaded requests makes the SLO look good by hiding real harm. Choosing a target no one can measure prevents accountability. Copying another company's number ignores user needs and operating economics.
+D: A technically successful inference response can still be useless. Keep serving reliability objectives separate from model-quality, safety, freshness, and cost objectives, while reviewing their combined product impact. Define partial-response semantics for streaming APIs.
+X: Write a complete checkout SLO with numerator, denominator, window, target, and owner. Calculate remaining request budget. Add a model-serving objective for time to first token and explain why it does not replace total completion or quality measures.
+V: Define user journey|Specify SLI and window|Target justified by user need?|Adopt objective and budget policy|Revise measurement or target|Measure and review outcomes|Adjust through explicit agreement
+R: 61,64,65,88
+L: performance.py
+@@64|SLIs
+E: A service level indicator measures a property users care about. ShopStream's checkout success fraction is an SLI; raw host CPU usually is a diagnostic metric. The measurement boundary decides which failures are visible and which disappear from the calculation.
+A: Measuring arrival time at a passenger's destination is different from measuring when the bus left the depot. Both are valid measurements, but only one directly captures the passenger's experience.
+M: Define eligible events, a good-event predicate, observation point, aggregation window, and data-quality checks. For latency, count requests under a threshold. For freshness, measure the age of available data. For durable jobs, measure completion within a deadline. Track missing and duplicated telemetry and maintain consistent dimensions.
+W: The server sees 10,000 requests and 9,990 successes, but 500 clients fail at DNS before reaching it. A server-only SLI cannot represent those failures. Add external probes or client measurements and state the remaining visibility limits.
+T: A metric is any measurement; an SLI is selected to represent service quality. An SLO sets its target. Black-box indicators are close to user experience but harder to attribute, while internal indicators offer more detail but can miss the edge.
+F: Counting only completed requests excludes hung requests unless deadlines are accounted for. Mixing test traffic with real traffic distorts the denominator. Reclassifying errors to improve the number defeats the purpose.
+D: For multi-step workflows, define whether success means accepted, durably queued, paid, or fulfilled. An HTTP 202 confirms acceptance, not completion. Connect workflow IDs to terminal outcomes and use freshness SLIs to detect stuck jobs.
+X: Define good and eligible checkout events. Show how a hung request enters the measurement. Build separate acceptance and completion SLIs for asynchronous inference and explain which one the customer actually purchased.
+V: Observe user operation|Classify eligible and good events|Measurement complete and unbiased?|Aggregate indicator|Repair telemetry or qualify uncertainty|Compare to objective|Investigate bad-event population
+R: 58,61,63,65
+L: performance.py
+@@65|Error Budgets
+E: An error budget is the amount of unreliability allowed by an SLO. ShopStream can use it to balance release speed and reliability work. It is a decision mechanism with an agreed policy, not permission to intentionally harm users until a quota runs out.
+A: A project has a contingency allowance for unexpected delays. Rapidly consuming it changes the plan. Unused allowance is not a reason to create delays deliberately.
+M: Compute allowed bad fraction as 1-target. Multiply by eligible events for a request-based budget. Calculate burn rate as observed bad fraction divided by allowed bad fraction. Define actions for sustained fast burn, near exhaustion, and recovery. Align the policy with the SLO window and release risk.
+W: At a 99.9% target, a 2% bad fraction is 20x burn. If traffic were uniform and that rate continued, a 30-day request budget would be consumed in about 1.5 days. Nonuniform traffic changes the calendar interpretation.
+T: Request-based budgets weight traffic volume; time-based budgets weight elapsed intervals. Both can be appropriate but are not interchangeable. A global budget can hide severe harm to a small region or tenant, so consider important slices.
+F: Treating the budget as only a dashboard produces no operational change. Freezing all changes can block urgent reliability fixes. Policies should distinguish risky feature releases from mitigations and safety patches.
+D: Multiple SLOs can consume budgets independently. A release may improve availability but degrade latency or model quality. Review the joint decision with product and engineering rather than optimizing one convenient percentage.
+X: Compute burn and remaining budget from sample counters. Compare a uniform-traffic assumption with a peak-hour outage. Write a release policy that pauses risky changes while allowing reviewed fixes and defines when normal release cadence resumes.
+V: Measure bad-event fraction|Calculate remaining budget and burn|Policy threshold crossed?|Change release and reliability priorities|Continue measured delivery|Mitigate and verify recovery|Review policy with stakeholders
+R: 62,63,64,109
+L: performance.py
+@@66|Observability
+E: Observability is the ability to infer useful internal state from a system's outputs. ShopStream needs to investigate failures it did not predict in advance. Logs, metrics, traces, profiles, and domain events provide complementary evidence about what the system did.
+A: A doctor combines temperature, scans, history, and tests rather than diagnosing every illness from one number. Instrumentation is valuable when it helps distinguish competing explanations.
+M: Instrument boundaries and state transitions with shared operation IDs, stable service and release metadata, bounded metrics, contextual logs, and propagated traces. Define retention and sampling. Correlate symptoms with dependency and resource evidence, form a hypothesis, run a safe discriminating test, and update the explanation.
+W: Checkout P99 rises after deployment. Metrics locate one version and route. Traces show pool wait rather than SQL time. Logs reveal transactions held across a provider call. A profile confirms threads are waiting, supporting a connection-occupancy hypothesis rather than a CPU regression.
+T: Monitoring checks known conditions. Observability enables new questions, but it is not a product feature automatically obtained by installing an agent. More data increases cost and privacy risk; useful context and reliable joins matter more than indiscriminate volume.
+F: Telemetry without release IDs makes change correlation difficult. Unbounded baggage creates overhead and leaks information. Sampling away every rare failure removes the very evidence needed for incident analysis.
+D: Systems can be locally healthy but globally incorrect because contracts, ordering, authorization, or workflows disagree. Include business invariants and reconciliation metrics. For ML, connect serving telemetry with feature freshness and model version while separating reliability from prediction-quality evaluation.
+X: Diagnose the pool-wait scenario with three competing hypotheses. Choose one measurement that distinguishes each. Design a telemetry schema that correlates an order and its async jobs without putting customer content in metric labels.
+V: User symptom appears|Correlate metrics logs and traces|Evidence distinguishes hypothesis?|Run safe targeted test|Add missing bounded instrumentation|Update explanation and mitigate|Verify business outcome
+R: 58,59,60,61,109
+L: performance.py
+@@67|Secrets Management
+E: Secrets management controls sensitive credentials throughout their lifecycle. ShopStream needs database passwords and provider tokens without embedding them in source code or images. A secret is useful only if authorized workloads can obtain it and unauthorized parties cannot.
+A: A building issues keys to specific staff, records access, replaces compromised keys, and retrieves them when roles change. Hiding a key under the doormat is not secure distribution.
+M: Prefer workload identity and short-lived credentials where supported. Store remaining secrets in an access-controlled manager, retrieve them through authenticated channels, minimize exposure, rotate with overlap when necessary, and revoke old credentials. Audit reads and changes. Encrypt secret stores and backups while protecting their encryption keys separately.
+W: The API obtains a database credential at startup and refreshes before expiry. Rotation temporarily accepts old and new credentials while connections transition, then revokes the old one. A failed refresh must not cause every process to stampede the secret manager.
+T: Environment variables are convenient but can leak through diagnostics or process inspection. Mounted files allow controlled refresh but require permissions and reload logic. Base64 encoding in a Kubernetes Secret is representation, not encryption by itself.
+F: Copying a secret into a Docker layer or log preserves it after later deletion. Committing an encrypted secret with its decryption key provides little protection. If exposure occurs, revoke and rotate; deleting the text alone is insufficient.
+D: Secret-manager availability becomes a dependency. Use bounded caching compatible with expiry, staggered refresh, and a recovery plan that does not bypass authorization. Build jobs need separate narrowly scoped identity from runtime workloads.
+X: Run the redaction test. Design two-phase credential rotation with verification and revocation. Trace which artifacts, logs, backups, and process environments might contain a leaked provider key and define containment actions.
+V: Workload needs credential|Authenticate workload identity|Policy permits secret access?|Retrieve short-lived value|Deny and audit|Use without logging then rotate|Revoke expired or exposed secret
+R: 7,68,70,72
+L: security.py
+@@68|IAM
+E: Identity and access management determines who or what can do which actions on which resources. ShopStream must distinguish a real seller from an anonymous caller, then verify that the seller owns the product being changed. Authentication and authorization are separate decisions.
+A: A campus ID proves identity, while laboratory permissions determine which rooms that person can enter. A valid ID does not grant every privilege in the building.
+M: Authenticate a human or workload, evaluate policy using principal, action, resource, and context, and deny by default when no grant applies. Use roles for common duties and attributes for contextual restrictions where appropriate. Scope service identities, audit sensitive decisions, and review grants over time. Enforce tenant and object boundaries at the data operation.
+W: Seller A has product-write permission but requests product B owned by seller B. The service checks ownership and rejects the mutation. A gateway scope check alone would not prevent this horizontal privilege violation.
+T: RBAC groups permissions by role; ABAC evaluates attributes and can express finer context at greater policy complexity. Network reachability is not identity. OAuth scopes express delegated permissions but do not replace resource-specific authorization.
+F: Broad wildcard permissions expand compromise impact. Shared service accounts obscure accountability. Checking authorization only in the frontend is ineffective because callers can invoke the backend directly.
+D: Policy changes and revocation interact with caches and long-lived sessions. Define the maximum tolerated authorization staleness, then design cache keys, token lifetime, and invalidation accordingly. Test both allowed and denied cases across tenant boundaries.
+X: Build a principal-action-resource matrix for buyers, sellers, support, and workers. Test cross-tenant access in the security lab. Design a break-glass role with time limit, audit, and review rather than a permanent administrator credential.
+V: Protected operation requested|Authenticate principal|Policy and ownership allow action?|Execute scoped operation|Deny with safe response|Audit sensitive decision|Review and expire privileges
+R: 5,67,69,70
+L: security.py
+@@69|OAuth
+E: OAuth enables delegated authorization: an application obtains limited access to a resource without receiving the user's password for that resource. OpenID Connect adds an identity layer for login. ShopStream must not treat an arbitrary OAuth access token as proof of identity for every audience.
+A: A hotel gives a valet a limited key for parking a car, not ownership of the car or access to the guest's room. The key's recipient and permitted purpose matter.
+M: In authorization-code flow with PKCE, the client creates a verifier and sends its derived challenge with the authorization request. The authorization server authenticates the user and obtains required consent, then redirects a short-lived code to an exact registered URI. The client exchanges code plus verifier for tokens, validates the response context, and uses an audience-appropriate access token. Use established libraries and current provider guidance.
+W: ShopStream requests read-only calendar access. The user approves at the identity provider. The backend exchanges the code and calls the calendar API with the access token. An OIDC ID token, when used for login, must be validated for issuer, audience, signature, time claims, and relevant nonce binding.
+T: Authentication asks who the user is; OAuth authorization asks what delegated access is granted. Access tokens authorize APIs, refresh tokens obtain new access tokens, and ID tokens carry identity assertions to their client. Their formats and audiences differ.
+F: Loose redirect matching enables token/code leakage. Missing request correlation permits login-flow attacks. Avoid implicit and password-grant patterns for new designs; follow modern security guidance, including PKCE and appropriate CSRF/mix-up defenses.
+D: Public clients cannot keep a static client secret confidential. Browser applications require careful token exposure and session architecture choices. Refresh-token rotation or sender constraints can limit replay depending on the deployment; token theft remains a security event requiring revocation and investigation.
+X: Draw every participant and message in code plus PKCE flow. Identify which secret a public client cannot safely keep. Trace a rejected redirect URI and explain why exact matching and request binding matter.
+V: Client starts authorization|Send challenge and bound request|User authorizes requested access?|Return short-lived code|Return controlled denial|Exchange code with verifier|Use validated audience-specific token
+R: 68,70,71,77
+L: security.py
+@@70|JWT Rotation
+E: JWT rotation can refer to replacing signing keys or rotating refresh credentials; these are distinct mechanisms. ShopStream must validate tokens and transition keys without accepting forged tokens or unexpectedly rejecting every valid session. JWTs are signed containers, not automatically encrypted secrets.
+A: A university replaces the stamp used on passes while old valid passes expire. Separately, it replaces renewal vouchers after use. Confusing the stamp with the voucher leads to broken security policy.
+M: Publish a new verification key before issuing tokens signed by its key ID. Verifiers use a trusted issuer key source, an algorithm allowlist, signature validation, issuer, audience, and time-claim checks. Retain old verification keys for the intended validity overlap unless compromise requires revocation. Refresh-token rotation records token-family state and detects reuse according to provider policy.
+W: Key A signs access tokens valid for ten minutes. Publish key B, begin signing with B, and keep A verification through the valid overlap plus controlled clock allowance. If A is compromised, planned overlap is inappropriate; revoke and force affected sessions through recovery.
+T: Short-lived access tokens bound exposure but do not provide instant revocation by themselves. Opaque tokens with introspection centralize current status at additional dependency cost. Rotating refresh tokens does not change already-issued access-token signatures.
+F: Trusting an arbitrary token-provided key URL enables key substitution or SSRF. Decoding without verification is not authentication. Unlimited clock leeway effectively extends expiry. Never put sensitive private data in a readable JWT payload unnecessarily.
+D: A stale JWKS cache can reject new tokens or retain revoked keys. Refresh unknown key IDs with rate limits to resist forced fetches. Define emergency compromise response separately from normal rotation and test partial rollout across regions.
+X: Write a signing-key overlap timeline. Distinguish expired access token, revoked signing key, and reused refresh token responses. Test validation failures using a maintained JWT library in an isolated application rather than implementing cryptography by hand.
+V: Token received|Select trusted issuer key|Signature and claims valid?|Authorize scoped action|Reject and possibly refresh safely|Rotate credentials by lifecycle|Retire old keys after policy
+R: 67,68,69,96
+L: security.py
+@@71|TLS
+E: TLS protects a connection against eavesdropping and tampering while authenticating the server, and optionally the client. ShopStream customers need confidence that they are talking to the intended site. TLS does not authorize business actions or protect data after an endpoint decrypts it.
+A: Two people verify an official identity and agree on a private conversation code. The code protects the conversation in transit, but either participant can still mishandle the notes afterward.
+M: The client connects, negotiates supported protocol parameters, validates the certificate chain and hostname, performs a key exchange, and derives traffic keys. Authenticated encryption protects application records. Reuse connections and sessions where appropriate. Automate certificate issuance and renewal, protect private keys, and monitor expiry and handshake failures.
+W: A browser connects to shop.example over HTTPS. It rejects a certificate for another hostname even if the certificate is otherwise trusted. If TLS terminates at the reverse proxy, a second connection to the application needs its own transport-security decision.
+T: TLS provides transport protection, not encryption of database files or end-to-end confidentiality across terminating proxies. Mutual TLS authenticates both connection peers but still requires application authorization. TLS 1.3 early data has replay considerations and should not casually carry non-idempotent operations.
+F: Disabling certificate verification to fix a deployment removes the identity guarantee. Expired certificates create broad outages. Mixed TLS termination assumptions can leave internal hops unencrypted without the team realizing it.
+D: Handshake latency and certificate validation are part of connection setup, not every request on a reused connection. Investigate DNS, TCP/QUIC, TLS, and HTTP separately. Current cipher and protocol configuration should follow maintained platform guidance rather than a copied static list.
+X: Use a standard client with verification enabled. Explain why a hostname mismatch must fail. Draw TLS boundaries through CDN, proxy, service, and database, identifying which component can see plaintext at each hop.
+V: Client initiates secure connection|Negotiate and validate certificate|Identity and handshake valid?|Derive keys and protect records|Abort without application secrets|Exchange authenticated ciphertext|Rotate and monitor certificates
+R: 4,69,72,73,99
+L: protocols.py
+@@72|Encryption at Rest
+E: Encryption at rest protects stored data against certain forms of unauthorized storage access. ShopStream can encrypt disks, database storage, object storage, and backups. It does not stop an authorized compromised application from reading data it can normally decrypt.
+A: A locked filing cabinet protects papers when the office is unattended. Someone holding the key can still read them. Key access and application permissions are therefore as important as the lock.
+M: Use established storage encryption or authenticated application-level encryption where required. Envelope encryption uses a data-encryption key for content and a key-encryption key to protect that key. Separate key permissions from data permissions, audit use, rotate according to supported procedures, and ensure recovery plans include secure key availability.
+W: An encrypted backup is copied to a separate account. A restore drill verifies both backup integrity and access to the necessary key. Losing the key can make an intact backup permanently unusable; keeping the key beside unrestricted ciphertext weakens separation.
+T: Disk encryption is transparent and protects lost media. Field-level encryption can narrow exposure but complicates search, indexing, rotation, and debugging. Hashing is one-way verification, not reversible encryption; passwords need dedicated password-hashing algorithms.
+F: Encrypting production storage but leaving plaintext exports or logs creates gaps. Hard-coding keys in source defeats rotation. Custom cryptographic formats introduce nonce, integrity, and key-management risks; use reviewed libraries and managed capabilities.
+D: Key rotation may rewrap data keys without rewriting every object, depending on the design. Deleting a key is not automatically a complete data-deletion guarantee if copies or plaintext derivatives exist. Inventory every storage and export path before making that claim.
+X: Draw data keys and wrapping keys separately. Design a backup restore with controlled key access. Compare transparent disk encryption with selected field encryption for customer addresses, including search and operational trade-offs.
+V: Data ready for storage|Obtain authorized encryption context|Key access permitted?|Encrypt with integrity protection|Deny and audit|Store ciphertext and protected key metadata|Restore through controlled decryption
+R: 67,68,73,84
+L: security.py
+@@73|Encryption in Transit
+E: Encryption in transit protects data while it moves between endpoints. ShopStream needs protection from browser to edge, edge to origin, application to database, and service to service where the threat model requires it. One HTTPS lock does not describe every internal hop.
+A: A parcel travels in locked containers, but workers opening it at transfer stations can inspect it. Every termination point is a trust boundary rather than a continuation of one invisible tunnel.
+M: Inventory communication paths, use authenticated transport protocols, validate peer identities, manage certificates or credentials, and prevent insecure fallback. Re-encrypt after trusted termination where required. For sensitive application payloads needing confidentiality from intermediaries, evaluate application-level end-to-end encryption and its operational consequences.
+W: The browser uses TLS to a CDN. The CDN decrypts to cache public assets, then uses a separate verified TLS connection to the origin. The application connects to PostgreSQL with certificate validation under the chosen database TLS mode.
+T: TLS protects transport endpoints. VPNs protect network paths but may not identify the application peer. Mutual TLS provides workload identity but does not replace authorization. At-rest encryption covers storage after arrival.
+F: Encrypting without validating peer identity can still permit interception. Allowing a silent fallback to plaintext defeats policy. Logging decrypted request bodies reintroduces exposure after the protected transfer.
+D: Service meshes can automate certificates and transport policy, but correctness depends on workload enrollment, bypass paths, and authorization configuration. Verify actual traffic and identity boundaries rather than assuming installation means every hop is protected.
+X: Mark every decrypting endpoint in the ShopStream architecture. Identify a direct backend path that bypasses the proxy. Design a certificate-expiry drill and a policy test that rejects plaintext on protected internal routes.
+V: Component sends data|Choose authenticated transport|Peer identity verified?|Transmit encrypted records|Abort insecure connection|Decrypt only at intended endpoint|Protect next hop separately
+R: 4,68,71,72
+L: protocols.py
+@@74|WAF
+E: A web application firewall inspects HTTP traffic and applies protective rules. It can block known attack patterns and provide a quick mitigation while ShopStream fixes application code. It cannot understand every business rule or replace secure implementation.
+A: A building guard checks packages for suspicious signs. The guard can stop obvious threats but cannot determine every visitor's legitimate access to every document inside.
+M: Place the WAF at an authorized traffic boundary, normalize requests, evaluate managed and custom rules, and choose allow, block, challenge, or log actions. Start risky changes in observation mode where appropriate, review false positives, and protect the origin from bypass. Version and audit rule changes.
+W: A sudden pattern of malformed requests targets a known vulnerable path. A narrowly scoped rule reduces exposure while the application patch is tested. Legitimate uploads are sampled to ensure the rule does not block normal customer content.
+T: A WAF addresses application-layer request patterns. DDoS protection also needs network and upstream capacity. Authorization, parameterized queries, and output encoding remain application responsibilities. Broad pattern matching trades coverage against false positives.
+F: Treating a blocked-request count as proof of safety ignores bypasses and false positives. Logging full suspicious bodies may expose secrets. Overly broad emergency rules can become an outage themselves.
+D: Attackers and legitimate clients can use encodings that different parsers interpret differently. Keep the WAF and application stack maintained and test normalization boundaries. Use application telemetry to verify whether blocked patterns correspond to actual vulnerable behavior.
+X: Design a scoped rule in log-only mode for an isolated test route. Define evidence before switching to block. Explain how to patch the root cause and later remove a temporary rule without losing protection.
+V: HTTP request reaches boundary|Normalize and inspect policy|Request allowed by rules?|Forward to application controls|Block or challenge and record|Review false positives and coverage|Update rules with code fixes
+R: 5,75,78,79,80
+L: security.py
+@@75|DDoS Protection
+E: Distributed denial-of-service protection preserves useful service during excessive malicious traffic. ShopStream may face bandwidth floods, connection exhaustion, or expensive application requests. The defense must match the exhausted resource and act before that resource collapses.
+A: Thousands of callers can jam a shop's phone lines before staff answer. A rule enforced only after the cashier answers cannot restore the upstream telephone capacity.
+M: Use upstream network protection, traffic filtering, CDN caching, connection limits, application admission control, and protected origin access. Distinguish attacks from legitimate flash crowds using traffic shape and business context. Prioritize essential functions, bound expensive work, and coordinate with providers through a prepared runbook.
+W: A public inference endpoint receives many long requests. Request-count limits alone are insufficient because each can consume large compute. Apply authenticated quotas, input limits, concurrency bounds, and cost-aware admission while preserving a small protected administrative path.
+T: Autoscaling absorbs some legitimate growth but may amplify cost during abuse. WAF rules handle certain HTTP patterns; they cannot recover a saturated upstream link alone. Capacity, filtering, and application efficiency are complementary.
+F: Exposing an origin IP lets attackers bypass the CDN. Blocking all shared-IP users harms legitimate customers. A globally shared limit can let one tenant deny service to others. Scope controls and measure user impact.
+D: Defenses can become dependencies or create false positives. Test emergency controls under safe synthetic load and keep provider contact and rollback procedures current. Avoid logging every rejected packet or request in a way that creates a second resource-exhaustion path.
+X: Map bandwidth, connection, and expensive-query attacks to appropriate control layers. Design a cost budget for inference. Run a local bounded load test and specify stop conditions; do not direct tests at third-party systems.
+V: Traffic surge detected|Identify exhausted resource and source pattern|Useful demand can be admitted safely?|Prioritize and serve bounded traffic|Filter upstream or shed at boundary|Monitor collateral user impact|Recover normal policy gradually
+R: 1,44,48,74,88
+L: performance.py
+@@76|CORS
+E: Cross-origin resource sharing is a browser mechanism that controls which origins may read selected cross-origin responses. ShopStream's web frontend may call an API on another origin. CORS is not API authentication and does not stop non-browser clients from sending requests.
+A: A receptionist follows a rule about which outside offices may receive copied documents. The rule does not prove the caller's identity or prevent someone from delivering a request to the building.
+M: The browser compares origins, sends a preflight for certain methods or headers, and checks response access-control headers. The server should allow specific trusted origins, methods, and headers. Credentialed requests require explicit compatible policy rather than a wildcard origin. Reflect Origin only after exact allowlist validation and vary responses appropriately when cached.
+W: A frontend at https://app.example calls https://api.example. The API approves that exact origin and necessary headers. A malicious origin receives no readable credentialed response. The server still authenticates the user and checks object ownership for every mutation.
+T: Same-origin policy restricts browser reading. CORS selectively relaxes it. CSRF concerns unwanted credentialed actions, which can occur even when an attacker cannot read the response. CSP addresses content execution and loading policies rather than replacing CORS.
+F: Returning whatever Origin was supplied with credentials enabled trusts every site. Treating a successful preflight as authorization is wrong. Some simple requests are sent without preflight, so CORS alone cannot protect state changes.
+D: Origin includes scheme, host, and port. Subdomain wildcard logic must resist suffix mistakes such as attacker-controlled lookalike domains. Test cached preflight behavior and Vary: Origin so one origin's permission is not incorrectly reused for another.
+X: Evaluate two allowed origins and one lookalike in the security lab. Explain why curl can call an API despite CORS rejection in a browser. Add credentials and show why exact origin handling and CSRF defenses remain necessary.
+V: Browser cross-origin request|Evaluate origin and optional preflight|Explicit browser-read policy permits?|Return matching CORS headers|Omit permission or reject preflight|Authenticate actual API operation|Browser enforces response access
+R: 68,77,79
+L: security.py
+@@77|CSRF
+E: Cross-site request forgery tricks a user's browser into performing an unwanted action using automatically attached credentials, commonly cookies. ShopStream must ensure a cookie-authenticated address change originated from the user's intended application flow.
+A: A stranger hands a messenger a forged instruction that the messenger delivers with a trusted uniform. The server sees the uniform but must also verify the instruction's origin and intent binding.
+M: Use non-GET methods for state changes, bind an unpredictable CSRF token to the user's session or use a correctly signed double-submit design, validate it on mutations, and check Origin or Referer under a defined policy. Set cookies Secure, HttpOnly where appropriate, and a suitable SameSite mode. Treat these as complementary controls.
+W: An isolated test page attempts to submit an address-change form while the browser holds a ShopStream cookie. Without the correct session-bound CSRF token, the server rejects the mutation even if the cookie is present. A legitimate form includes the token and passes authorization.
+T: CORS controls response reading, not all request sending. XSS can often defeat CSRF defenses by executing in the trusted origin. Bearer tokens explicitly added in an authorization header change the CSRF threat, but storage and XSS risks remain.
+F: Putting a CSRF token only in a cookie that browsers attach automatically provides no independent proof. Using GET for destructive actions exposes them to links and prefetching. SameSite alone may not cover every deployment and navigation pattern.
+D: Login CSRF and multi-origin architectures require careful flow binding. Choose token handling through a maintained framework and test expected cross-site redirects. Monitor rejected mutations by origin and route without logging token values.
+X: Run a constant-time token comparison test with missing and wrong tokens. Describe a safe local browser test that changes only disposable data. Combine session, Origin, method, token, and object-ownership checks into one mutation policy.
+V: Cookie-authenticated mutation|Validate method origin and token|Request bound to legitimate session flow?|Check authorization and mutate|Reject and record safe metadata|Return controlled result|Monitor rejection anomalies
+R: 68,69,76,79
+L: security.py
+@@78|SQL Injection
+E: SQL injection occurs when untrusted input changes the structure of a database command. ShopStream search text must be treated as data, not executable SQL. The root problem is mixing command syntax with values through string construction.
+A: A librarian expects a book title, but a visitor inserts instructions into the request form. A safe form keeps the title in a data field rather than treating it as part of the librarian's procedure.
+M: Use driver parameter binding for values, allowlists for identifiers or sort directions that cannot be parameterized as values, and narrowly scoped database roles. Validate types and limits as additional controls. Review raw SQL paths and test harmless adversarial strings against an isolated database. Log error categories, not full sensitive queries.
+W: Searching for a name containing an apostrophe is ordinary data. The parameterized query SELECT id FROM users WHERE name = parameter returns matching rows without changing the predicate. The supplied SQLite demonstration verifies this locally; PostgreSQL drivers use their own parameter syntax.
+T: Escaping strings manually is fragile and context-dependent. ORMs help only when their safe APIs are used; raw query interpolation remains vulnerable. Stored procedures are not automatically safe if they construct dynamic SQL unsafely.
+F: Parameter placeholders cannot safely substitute arbitrary table names or ORDER BY fragments. Whitelist these choices explicitly. A WAF can reduce some attacks but does not repair unsafe query construction.
+D: Least privilege reduces impact: a read-only search role should not modify payment tables or execute unnecessary privileged functions. Test second-order paths where stored user data is later concatenated into another query. Include code review and integration tests, not only signature scanning.
+X: Run the safe-query demo using an apostrophe and a harmless SQL-looking string. Assert it returns only exact matches. Implement an allowlisted sort choice and reject unknown identifiers without concatenating arbitrary user input.
+V: Untrusted query input|Separate syntax from bound values|Identifiers from allowlist?|Execute parameterized statement|Reject unsupported query shape|Apply least-privilege permissions|Return scoped rows and safe errors
+R: 25,26,68,74
+L: security.py
+@@79|XSS
+E: Cross-site scripting occurs when untrusted content executes as script in a user's browser under a trusted site's origin. ShopStream product reviews must appear as text unless a deliberately sanitized rich-text format is supported. An attacker running in the origin can act with the page's privileges.
+A: A noticeboard should display a visitor's message, not obey instructions embedded in it. The distinction depends on how the message is placed into the board, not merely whether it looked suspicious at entry.
+M: Use context-appropriate output encoding, safe DOM APIs such as textContent for text, and maintained sanitization for allowed rich HTML. Avoid dangerous sinks and inline script construction. Add a restrictive Content Security Policy as defense in depth, with controlled script sources or nonces as appropriate. Keep dependencies updated and test stored, reflected, and DOM-based paths.
+W: A review containing literal angle brackets should render as text. The Python lab HTML-escapes a controlled string and verifies no raw markup remains. That escaping is suitable for HTML text context, not automatically for JavaScript, CSS, URLs, or arbitrary HTML attributes.
+T: Input validation limits acceptable data; output encoding protects a specific rendering context. Sanitization allows a restricted markup language. HttpOnly prevents direct cookie reads by script but does not stop injected code from sending authenticated requests.
+F: Using innerHTML for plain text creates a dangerous sink. Assuming a frontend framework makes every escape hatch safe is wrong. CSP alone cannot replace correct output handling, and unsafe inline allowances can weaken it substantially.
+D: Third-party scripts execute with powerful page privileges. Minimize them, control loading policy, and review supply-chain changes. Monitor CSP reports and suspicious rendering paths while considering report noise and privacy. Avoid putting secrets in browser-accessible storage merely because transport uses TLS.
+X: Render a harmless markup-like review as text and verify the DOM contains no new element. Identify context changes between HTML text and a URL attribute. Design rich-text sanitization tests covering allowed formatting and removed active content.
+V: Untrusted content displayed|Identify output context|Safe encoding or sanitizer applied?|Render inert or approved content|Reject unsafe rendering path|Apply CSP defense in depth|Test browser behavior
+R: 67,76,77,108
+L: security.py
+@@80|SSRF
+E: Server-side request forgery occurs when an attacker influences a server to request an unintended destination. ShopStream's image-import feature could otherwise reach internal services using the server's network privileges. Valid URL syntax does not imply a safe destination.
+A: A receptionist is asked to fetch a document from an address supplied by a visitor. The receptionist must not enter private offices simply because the address is well formed.
+M: Prefer a fixed allowlist of required destinations and protocols. Parse once with a trusted library, validate host and port, resolve addresses, reject disallowed private or special ranges as appropriate, and enforce egress restrictions at the network layer. Disable redirects or validate every redirect destination. Bound time, response size, and content type. Consider DNS rebinding and resolution-to-connection races.
+W: An import service accepts only HTTPS URLs on a known image partner domain and connects through a restricted egress proxy. A redirect to an internal address is denied. The local lab demonstrates allowlist parsing only and explicitly does not claim complete DNS or connection-level SSRF protection.
+T: Input validation is one layer; egress policy limits what a compromised or bypassed fetcher can reach. CORS is a browser policy and does not protect server-side fetches. WAF signatures cannot reliably understand every resolved destination.
+F: Blocking only localhost misses private, link-local, IPv6, alternate encodings, and redirect paths. Checking DNS then letting a client resolve again can permit rebinding. Never forward user credentials to arbitrary redirect destinations.
+D: Some legitimate products must fetch arbitrary public URLs. Isolate that fetcher, deny internal routes and metadata endpoints, validate actual connected addresses, enforce strict resource budgets, and avoid ambient credentials. Test only controlled local destinations and inspect denied egress telemetry.
+X: Run the strict allowlist validator on allowed and lookalike hosts. Explain why it is insufficient for arbitrary URLs. Design a sandboxed fetch service with redirect checks, connected-IP validation, egress restrictions, and response-size limits.
+V: Server asked to fetch URL|Validate allowed scheme host and port|Destination and actual route permitted?|Fetch with bounded resources|Deny and audit target metadata|Revalidate redirects and response|Return safe processed content
+R: 5,68,74,97
+L: security.py
+@@81|Database Migrations
+E: A database migration changes schema or data in a controlled versioned process. ShopStream must evolve while old and new application instances may run together. A migration that succeeds in isolation can still cause an outage through locks or compatibility breaks.
+A: Renovating a library while it stays open requires temporary signs and compatible shelf locations. Removing the old entrance before visitors learn the new one strands them.
+M: Use expand-and-contract: add compatible schema, deploy code that tolerates both forms, backfill in bounded checkpointed batches, switch reads and writes after verification, then remove old schema only after old code and rollback requirements expire. Set lock and statement budgets, serialize migration ownership, and review database-specific DDL behavior.
+W: Add display_name as nullable while retaining full_name. New code writes both, a backfill copies old values, and readers migrate after validation. Only later is full_name removed. A failed deployment can still return to old code during the compatibility window.
+T: Schema migration differs from a bulk data repair, though both may share tooling. Transactional DDL support varies by operation and database. A rollback script is not automatically safe if it discards new data; forward repair may be preferable.
+F: One giant backfill transaction creates locks, replication lag, and large rollback work. Adding constraints without checking existing rows can fail late. Running migrations from every app replica risks races.
+D: Test a compatibility matrix: old application with expanded schema, new application with partially backfilled data, and rollback after new writes. For large tables, use supported concurrent index or deferred-validation procedures and measure their resource effects in staging.
+X: Walk through the supplied expansion SQL. Backfill by primary-key ranges with checkpoints. Design a release gate that prevents dropping a column while any supported binary or consumer still requires it.
+V: Schema change proposed|Check old and new compatibility|Safe expansion possible?|Apply additive change and backfill|Redesign destructive transition|Switch behavior and verify|Contract after rollback window
+R: 25,52,54,55,82
+L: database.sql
+@@82|Schema Versioning
+E: Schema versioning tracks the structure and meaning of data exchanged or stored over time. ShopStream events may be consumed by services deployed on different schedules. Readers and writers need an explicit compatibility contract, not just matching field names.
+A: Departments use different editions of a form. Adding an optional box is often manageable; changing the meaning of an existing box can silently corrupt decisions even if the paper still looks familiar.
+M: Identify schema version and owner, define optional/default behavior, validate compatibility in CI, and evolve through additive changes where possible. Preserve field meaning and stable identifiers. For binary protocols, follow rules for field numbers and unknown fields. Maintain adapters or dual readers during transitions and define retention for historical data.
+W: OrderPlaced v1 contains amount in minor currency units. Adding currency as an optional field with a documented migration default may be compatible under a restricted historical assumption. Reinterpreting amount as major units is a breaking semantic change even if its numeric type stays the same.
+T: Database migrations change physical or logical storage. API versioning changes external contracts. Event schemas must account for retained historical messages and replay. Semantic version numbers communicate intended compatibility but do not prove it.
+F: Making an optional field required breaks older producers. Reusing a removed protobuf field number can reinterpret old data. Testing only the newest producer with the newest consumer misses mixed-version failures.
+D: Compatibility has direction: a new reader handling old data differs from an old reader handling new data. Test both required directions and include semantic invariants, units, timezones, and enum expansion. A parser accepting a record does not prove the business logic understands it.
+X: Write v1 and v2 order-event examples with explicit currency units. Test old/new reader-writer combinations. Design a replay adapter for a historical schema without silently inventing missing business information.
+V: Producer proposes schema change|Check syntax and semantic compatibility|Supported readers handle change?|Publish versioned contract|Introduce adapter or new version|Roll out mixed-version support|Retire only after retention window
+R: 16,17,81,102,103
+L: protocols.py

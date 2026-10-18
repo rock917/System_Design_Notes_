@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Image registry"]
+  N1["Container runtime"]
+  N2["Application container"]
+  N3["Host kernel"]
+  N4["Persistent volume"]
+  N5["Host network"]
+  N0 -->|pull layers| N1
+  N1 -->|start process| N2
+  N2 -->|system calls| N3
+  N2 -->|mounted data| N4
+  N2 -->|packets| N5

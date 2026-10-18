@@ -1,0 +1,15 @@
+flowchart TD
+  N0["User requests content"]
+  N1["Route to nearby eligible edge"]
+  N2{"Fresh permitted cached object?"}
+  N3["Serve edge object"]
+  N4["Fetch protected origin"]
+  N5["Store by explicit policy"]
+  N6["Return and measure delivery"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

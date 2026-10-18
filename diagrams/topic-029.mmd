@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Read request"]
+  N1["Determine freshness requirement"]
+  N2{"Replica sufficiently current?"}
+  N3["Read from replica"]
+  N4["Read primary or wait boundedly"]
+  N5["Validate session position"]
+  N6["Return consistent-enough view"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

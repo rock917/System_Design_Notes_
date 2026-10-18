@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Fetch parent list"]
+  N1["Inspect relationship access"]
+  N2{"One query per item?"}
+  N3["Collect IDs and batch"]
+  N4["Use existing bounded query"]
+  N5["Map related rows"]
+  N6["Return authorized page"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as API
+  participant P2 as Cache
+  participant P3 as Database
+  P0->>P1: Read product
+  P1->>P2: GET scoped key
+  P2-->>P1: Miss
+  P1->>P3: Query authoritative product
+  P3->>P1: Value and version
+  P1->>P2: SET with TTL
+  P1->>P0: Product response

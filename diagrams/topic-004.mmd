@@ -1,0 +1,14 @@
+flowchart TD
+  N0["HTTPS request"]
+  N1["Validate and normalize"]
+  N2{"Route permitted?"}
+  N3["Forward to upstream"]
+  N4["Reject malformed request"]
+  N5["Apply response policy"]
+  N6["Return to client"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

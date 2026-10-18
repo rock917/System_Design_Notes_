@@ -1,0 +1,12 @@
+stateDiagram-v2
+  state "Built" as S0
+  state "Verified" as S1
+  state "Canary" as S2
+  state "Promoted" as S3
+  state "Reverted" as S4
+  [*] --> S0
+  S0 --> S1: checks pass
+  S1 --> S2: release begins
+  S2 --> S3: guardrails pass
+  S2 --> S4: regression
+  S3 --> S4: late regression

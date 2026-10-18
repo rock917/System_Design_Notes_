@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Request arrives"]
+  N1["Resolve tenant and cost"]
+  N2{"Enough tokens?"}
+  N3["Consume atomically"]
+  N4["429 and retry hint"]
+  N5["Run bounded work"]
+  N6["Return result"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

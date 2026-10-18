@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Worker requests ownership"]
+  N1["Acquire lease and fencing token"]
+  N2{"Lease valid for work?"}
+  N3["Write with token validation"]
+  N4["Stop or reacquire safely"]
+  N5["Renew or compare-and-release"]
+  N6["Finish protected work"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

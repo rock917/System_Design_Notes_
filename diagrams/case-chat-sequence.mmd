@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant P0 as Sender
+  participant P1 as Chat service
+  participant P2 as History
+  participant P3 as Recipient
+  P0->>P1: Message with client ID
+  P1->>P2: Persist with conversation sequence
+  P2->>P1: Durable acknowledgment
+  P1->>P0: Accepted message ID
+  P1->>P3: Live delivery
+  P3-->>P1: Connection lost
+  P3->>P1: Reconnect after cursor
+  P1->>P2: Read missing history
+  P1->>P3: Replay newer messages

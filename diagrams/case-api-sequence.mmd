@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as Gateway
+  participant P2 as Limiter
+  participant P3 as Service
+  P0->>P1: Authenticated request
+  P1->>P2: Atomic tenant-cost debit
+  P2->>P1: Allow or reject
+  P1->>P3: Admit within capacity
+  P3->>P1: Result or bounded failure
+  P1->>P0: 200 or explicit 429 / 503

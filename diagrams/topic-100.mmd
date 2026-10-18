@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Client invokes generated method"]
+  N1["Attach deadline identity and metadata"]
+  N2{"Contract and authorization valid?"}
+  N3["Execute bounded RPC handler"]
+  N4["Return structured status"]
+  N5["Serialize response or stream"]
+  N6["Handle ambiguous outcome safely"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

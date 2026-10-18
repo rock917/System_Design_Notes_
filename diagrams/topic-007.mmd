@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Docker build"]
+  N1["Create immutable layers"]
+  N2{"Runtime configuration valid?"}
+  N3["Start isolated process"]
+  N4["Fail with diagnostics"]
+  N5["Apply limits and networking"]
+  N6["Serve until graceful stop"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

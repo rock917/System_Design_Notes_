@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Request"]
+  N1["Shard directory"]
+  N2["Shard A"]
+  N3["Shard B"]
+  N4["Shard C"]
+  N5["Rebalancer"]
+  N0 -->|key| N1
+  N1 -->|owner A| N2
+  N1 -->|owner B| N3
+  N1 -->|owner C| N4
+  N5 -.->|epoch update| N1

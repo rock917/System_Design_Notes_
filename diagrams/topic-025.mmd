@@ -1,0 +1,15 @@
+flowchart TD
+  N0["SQL predicate received"]
+  N1["Estimate rows and access cost"]
+  N2{"Index path cheaper?"}
+  N3["Traverse selected index"]
+  N4["Scan relevant table pages"]
+  N5["Apply filters and ordering"]
+  N6["Return matching rows"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

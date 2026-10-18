@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Business command"]
+  N1["Commit state and outbox"]
+  N2{"Transaction committed?"}
+  N3["Relay event"]
+  N4["Discard uncommitted intent"]
+  N5["Deduplicate and react"]
+  N6["Reconcile workflow status"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

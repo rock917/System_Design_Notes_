@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Domain event created"]
+  N1["Publish to topic"]
+  N2{"Subscription available?"}
+  N3["Deliver independent copy"]
+  N4["Retain or reject per policy"]
+  N5["Consumer records progress"]
+  N6["Other subscribers continue"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

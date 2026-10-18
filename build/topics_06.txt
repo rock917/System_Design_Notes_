@@ -1,0 +1,120 @@
+@@102|API Versioning
+E: API versioning manages contract evolution for clients that cannot all upgrade at once. ShopStream's mobile apps may remain active for months. Changing a field's meaning or required behavior can break them even when the endpoint URL remains identical.
+A: A university changes its enrollment form while accepting older forms for a transition period. Staff need a rule for interpreting each edition and a published date for retiring old ones.
+M: Define the public contract: paths, methods, fields, units, errors, authorization, pagination, and semantics. Prefer compatible additive changes where clients tolerate them. Introduce an explicit version for breaking changes through a chosen path, header, or media-type policy. Maintain adapters, contract tests, usage telemetry, migration guides, and a deprecation schedule.
+W: /v1/orders returns total_cents as an integer. A new multi-currency API adds explicit currency and an amount contract in /v2. Do not silently reinterpret total_cents as decimal major units. Track active v1 clients before retiring support.
+T: URL versions are visible and easy to route but duplicate endpoint surfaces. Header versions keep paths stable but need tooling and cache-key care. Backend deployment versions and API contract versions are different axes.
+F: Adding a required request field breaks old clients. Expanding an enum can break clients with exhaustive switches even if the JSON parser accepts it. Returning every legacy version indefinitely increases maintenance and security burden.
+D: Compatibility includes operational behavior such as stricter rate limits, pagination ordering, and changed error codes. Consumer-driven contracts help but may miss unknown clients. Publish guarantees and use real usage evidence before declaring a change harmless.
+X: Classify changes as additive, conditionally compatible, or breaking. Write v1/v2 examples with units. Design a retirement plan that measures remaining clients and provides an actionable migration error rather than silently changing semantics.
+V: Contract change proposed|Assess supported client behavior|Backward compatible under contract?|Evolve existing version|Introduce explicit new version|Test and communicate migration|Retire by usage and policy
+R: 51,81,82,103
+L: protocols.py
+@@103|Semantic Versioning
+E: Semantic Versioning communicates intended compatibility through MAJOR.MINOR.PATCH for a declared public API. It helps ShopStream dependency consumers judge updates, but a version number cannot prove the software obeyed its promise.
+A: A textbook edition label distinguishes a corrected typo from a new chapter or a reorganized syllabus. The label is useful only if the publisher follows a consistent definition of the syllabus readers rely on.
+M: Declare the public API. Increment major for incompatible changes, minor for compatible added functionality, and patch for compatible fixes under the specification. Treat prerelease identifiers and build metadata according to precedence rules. Never mutate a released version's contents; publish a new version and preserve artifact identity.
+W: Library 2.3.4 fixes a compatible bug as 2.3.5, adds a compatible optional function as 2.4.0, and removes an exported function as 3.0.0. A dependency resolver may allow a range, but a lockfile records the exact selected graph for reproducible builds.
+T: Calendar versioning communicates release time rather than compatibility intent. API versions identify contract families; artifact digests identify exact bytes. SemVer ranges are interpreted by package-manager rules, especially for 0.x and prereleases, so verify the ecosystem.
+F: Calling a breaking behavior change a patch does not make it compatible. Comparing version strings lexicographically misorders values such as 1.10 and 1.9. Mutable releases destroy reproducibility and trust.
+D: A security fix can change observable behavior while preserving the intended valid contract. Document exceptional compatibility effects rather than hiding them behind the patch label. Test real consumers and dependency constraints before upgrading.
+X: Assign versions to three concrete library changes. Order stable and prerelease versions using a proper parser. Explain why a compatible declared range still needs locked resolution, tests, and artifact integrity checks.
+V: Change ready for release|Identify public contract impact|Incompatible supported behavior?|Increment major|Choose minor or patch by change|Publish immutable version and notes|Validate consumers and lock resolution
+R: 82,102,107,108
+L: protocols.py
+@@104|Infrastructure as Code
+E: Infrastructure as code expresses infrastructure configuration in reviewable files. ShopStream can recreate networks, compute, and policy through a repeatable process rather than undocumented manual clicks. Files alone do not guarantee that the live environment matches them.
+A: A building has a versioned blueprint and an inspection process. A blueprint can be outdated, and construction still needs permits, materials, and a record of what was actually built.
+M: Declare desired resources, separate environments and variables, validate syntax and policy, preview changes, review destructive actions, apply through controlled identity, and detect drift. Store code in version control, protect state and secrets, and keep recovery access outside the resources it manages where appropriate.
+W: A reviewed change increases API capacity and adds a restricted network rule. The plan shows the exact proposed resource changes. After application, monitoring and drift checks verify the intended result; an emergency console edit is later reconciled into code.
+T: Declarative tools reconcile desired state; imperative scripts specify steps. Both need idempotence and failure handling. Immutable replacement can simplify drift but requires data persistence and safe traffic transition.
+F: Copying environments without isolating state can modify the wrong resources. Checking secrets into configuration leaks them. A successful plan does not guarantee a successful apply because permissions, quotas, and concurrent changes can intervene.
+D: Infrastructure dependencies can form recovery traps: the state store, identity provider, or deployment runner may depend on infrastructure being rebuilt. Document bootstrap and disaster-recovery order and keep narrowly scoped emergency access audited.
+X: Review the local Terraform plan without cloud resources. Identify state, configuration, credentials, and live resources as separate artifacts. Design a drift reconciliation process for an emergency firewall change.
+V: Infrastructure change committed|Validate and preview desired diff|Change reviewed and scoped correctly?|Apply through controlled identity|Revise unsafe or unexpected plan|Verify live state and drift|Record reproducible recovery inputs
+R: 6,67,83,105
+L: main.tf
+@@105|Terraform
+E: Terraform is an infrastructure-as-code tool that compares configuration, recorded state, and provider observations to plan resource changes. ShopStream can review intended infrastructure changes before applying them. Its state is a sensitive mapping between configuration addresses and real objects.
+A: A contractor compares the blueprint, inventory ledger, and actual building before work. Editing the ledger by hand can make the contractor misunderstand which wall or room a plan refers to.
+M: Initialize providers and backend, format and validate configuration, refresh observations as appropriate, build a plan, review it, and apply the selected plan through authorized credentials. Use a protected remote backend with appropriate locking support for team work. Commit provider dependency locks, version modules deliberately, and use supported import/move procedures when adopting or refactoring resources.
+W: The included terraform_data example creates local state only and needs no cloud account. Changing its input demonstrates a reviewed plan. In a real deployment, the same workflow must also account for provider credentials, quotas, replacement behavior, and a secure state backend.
+T: Terraform manages infrastructure lifecycle, while configuration-management tools often manage software inside hosts and Helm packages Kubernetes resources. These roles overlap but have different ownership boundaries. Do not let two systems independently manage the same field without a clear policy.
+F: State can contain secrets even when output is marked sensitive. Applying an old plan after unrelated changes requires careful review. Force-unlocking a genuinely active operation can permit concurrent state corruption; investigate ownership first.
+D: A plan can replace a resource rather than update it in place. Inspect lifecycle and provider behavior, dependency order, and data-preservation requirements. Protect state backups and test recovery, because source configuration alone may not recover every resource identity safely.
+X: Run fmt, init, validate, and plan when Terraform is installed. Inspect the local state after an optional apply. Describe a safe resource rename using supported moved declarations instead of deleting state entries casually.
+V: Configuration prepared|Initialize and compare state with provider|Plan matches intended scoped change?|Apply reviewed plan|Stop and inspect drift or replacement|Persist protected state|Verify resources and recovery
+R: 67,83,104,108
+L: main.tf
+@@106|Helm Charts
+E: A Helm chart packages parameterized Kubernetes manifests. ShopStream can reuse one application deployment template with environment-specific values. Templating reduces repetition but introduces a rendering step that must be inspected and tested.
+A: A standardized building plan accepts approved dimensions and materials. Supplying values does not guarantee the resulting building is safe; the completed plan still needs review.
+M: Define Chart.yaml, values, templates, and dependencies. Render with helm template, lint, inspect the resulting Kubernetes objects, and validate against the target API where available. Install or upgrade a named release with controlled values. Keep chart version, application version, and image digest distinct and document value defaults.
+W: The chart renders an inference Deployment and Service using configurable replica count and image. The Service selector must match the rendered Pod labels. A readiness path typo passes basic YAML parsing but produces unavailable endpoints at runtime.
+T: Helm packages and manages releases; plain manifests and Kustomize offer different configuration approaches. Terraform may manage cluster infrastructure while Helm manages application resources. Avoid overlapping ownership that causes competing updates.
+F: Unquoted or poorly typed values can render invalid objects. Secrets passed through values may enter release metadata or logs. A Helm rollback does not reverse external data migrations or irreversible application effects.
+D: Dependency updates can change rendered resources even if local templates stay the same. Lock and review chart dependencies, compare rendered diffs, and test upgrade and rollback compatibility. Verify flags and behavior against the installed Helm major version rather than assuming every release behaves identically.
+X: Render the included chart with one and three replicas. Match selectors and inspect probes. Change a value type incorrectly and predict whether lint, schema validation, or runtime behavior detects the problem.
+V: Chart and values selected|Render templates and inspect objects|Lint and target validation pass?|Install or upgrade release|Correct values or templates|Observe rollout and application metrics|Rollback only within compatibility bounds
+R: 8,54,55,104,105
+L: helm/Chart.yaml
+@@107|Build Caching
+E: Build caching reuses outputs when their relevant inputs have not changed. ShopStream can avoid reinstalling dependencies or recompiling unchanged code on every commit. A correct cache key represents all inputs affecting the result; missing inputs can ship stale or unsafe artifacts.
+A: A bakery reuses a prepared dough batch only if its ingredients, age, and handling match the recipe. A label saying 'same flour' is insufficient if the yeast or temperature changed.
+M: Identify build steps and their input graph. Key cached outputs by source, dependency lock, toolchain, platform, relevant configuration, and generated inputs. Order Dockerfile layers so stable dependency installation precedes frequently changing application source. Isolate cache writes by trust boundary and verify final artifact integrity independently.
+W: requirements.txt is copied and installed before application files. Editing inference_api.py can reuse the dependency layer; changing the requirements invalidates it. A secret or untracked network response must not silently determine a supposedly reproducible cached result.
+T: Caching improves speed but consumes storage and adds invalidation complexity. Hermetic builds declare inputs and reduce environmental dependence. Reproducible builds produce matching outputs under defined conditions; a cache hit alone demonstrates neither property.
+F: Restoring privileged caches from untrusted pull requests can introduce poisoned artifacts. Omitting compiler version or target architecture from a key creates incompatible results. Cache eviction affects speed and should not affect correctness.
+D: Separate dependency download caches from compiled-output caches: their validation and portability differ. Measure hit rate and saved critical-path time rather than raw cache size. Periodically compare clean and cached builds to detect missing inputs.
+X: Change application code and dependency inputs separately and predict layer reuse. Add the toolchain version to a build key. Design a trusted-release cache policy that does not accept attacker-controlled writes from forked contributions.
+V: Build step requested|Hash complete declared inputs|Trusted matching cache entry exists?|Reuse validated output|Execute step and record output|Verify final artifact provenance|Measure saved build time
+R: 6,7,103,108
+L: Dockerfile
+@@108|Dependency Hell
+E: Dependency hell occurs when required packages, versions, native libraries, or runtime assumptions conflict. ShopStream may upgrade one library and break another through a transitive dependency. Reproducible resolution and compatibility testing reduce surprises but do not eliminate maintenance.
+A: Several courses require different editions of the same textbook. A timetable that satisfies one course can fail another unless the shared requirements are reconciled or isolated.
+M: Declare direct dependencies, resolve the full graph, lock exact selected versions and integrity metadata, isolate environments, and test supported runtime/platform combinations. Update deliberately with release notes, vulnerability review, and representative tests. Track transitive dependencies and remove unused packages. Separate build-time from runtime requirements.
+W: A new ML package requires a native library ABI incompatible with the existing serving image. Python version pins alone do not solve it. Build a clean environment, inspect binary compatibility, and choose a compatible package set or isolate the workloads behind an API.
+T: Loose ranges ease updates but can drift. Exact locks improve reproducibility but need regular reviewed refreshes. Vendoring increases control and maintenance burden. Containers capture many user-space dependencies but still rely on host kernel and accelerator drivers.
+F: Installing into a shared global environment makes unrelated projects affect each other. Ignoring transitive packages hides risk. A successful import does not prove behavior, model numerical compatibility, or production performance.
+D: Supply-chain protection includes trusted registries, integrity checks, scoped publishing credentials, provenance, and minimal dependencies. An SBOM inventories components; it is not a security guarantee. Test upgrades against both functionality and operational characteristics such as memory and latency.
+X: Build the optional API dependencies in a clean virtual environment. Record resolved versions after testing. Diagnose a hypothetical native ABI mismatch and compare aligning versions with isolating services.
+V: Dependency change proposed|Resolve graph in isolated environment|Versions and platform compatible?|Lock and test full artifact|Adjust constraints or isolate workload|Review integrity and security evidence|Update with rollback record
+R: 6,7,103,107
+L: requirements-api.txt
+@@109|Production Incidents
+E: A production incident is a disruption requiring coordinated response to reduce user harm. ShopStream's priority during a checkout outage is safe mitigation and clear coordination. Finding the complete root-cause story can continue after service is restored.
+A: An emergency team first stabilizes a patient, assigns roles, and records actions. Several people independently changing treatment without communication can worsen the situation.
+M: Declare severity based on impact, appoint an incident commander, assign technical and communication roles, establish one timeline, and stop unrelated risky changes. Gather evidence, test bounded hypotheses, choose reversible mitigation, and verify recovery through user outcomes. Escalate early when expertise or authority is missing and preserve evidence for review.
+W: After a release, checkout P99 and failures rise. The commander freezes further rollout. Traces show connection-pool wait; the team disables the new path with a flag and verifies order success. It records unknown payment outcomes for reconciliation before closing the incident.
+T: Symptoms are observed harm, contributing factors increase likelihood or severity, causes explain mechanisms, and remediation changes the system. A rollback may mitigate without explaining the defect. Severity should follow impact, not how dramatic a graph looks.
+F: Restarting everything destroys evidence and can create a cold-start surge. Multiple uncoordinated changes make attribution impossible. Declaring recovery from CPU alone ignores stuck orders and lost jobs.
+D: A service can return healthy status while a backlog violates completion promises. Recovery criteria must include queue age, data integrity, and reconciliation of ambiguous side effects. Security incidents may require containment and evidence preservation beyond ordinary availability repair.
+X: Run the checkout incident tabletop with a timed evidence log. Choose one reversible mitigation and a rollback condition. Write recovery criteria covering requests, queues, payment reconciliation, and customer impact.
+V: Impact detected|Declare severity and assign roles|Immediate safe mitigation available?|Apply one controlled mitigation|Escalate and test hypotheses|Verify user and data recovery|Hand off to review and actions
+R: 55,60,62,66,110,111
+L: incident_drill.py
+@@110|On-Call
+E: On-call is a structured responsibility for responding to urgent service problems. It requires sustainable coverage, actionable alerts, access, and runbooks. ShopStream should not depend on one exhausted engineer remembering every recovery procedure.
+A: A hospital duty roster identifies who responds first and who provides specialist backup. The roster works only when handoffs, escalation, and equipment are ready.
+M: Define primary and secondary responders, handoff expectations, escalation paths, severity policy, and access checks. Review active risks before a shift. During a page, acknowledge, assess impact, follow safe runbooks, escalate when needed, and document changes. Afterward, improve alerts and automation to reduce recurring toil.
+W: A primary responder sees payment failures but lacks provider expertise. They page the secondary and incident commander while applying a documented checkout safeguard. A clear handoff records current state, actions taken, unknown outcomes, and the next decision owner.
+T: On-call is operational coverage; incident command is coordination during a specific event. Runbooks guide known procedures but do not replace judgment for unfamiliar failures. Automation handles repeatable safe tasks and should expose its own failures.
+F: Pages without runbooks or access waste the most important minutes. A single-person rotation creates burnout and a reliability risk. Treating every alert as urgent prevents prioritization.
+D: Measure page frequency, sleep disruption, response burden, and repeated manual work alongside service outcomes. Invest in removing noisy alerts and recurring causes. Practice access and escalation before an emergency, including loss of the normal authentication or communication provider.
+X: Write a shift handoff with risks, ongoing incidents, and ownership. Test a runbook from a fresh operator account in a safe environment. Design an escalation policy with time and impact triggers and a fallback communication path.
+V: Shift begins|Verify access risks and handoff|Actionable page received?|Acknowledge triage and escalate|Continue routine observation|Mitigate and record decisions|Handoff and reduce recurring toil
+R: 62,67,109,111
+L: incident_drill.py
+@@111|Postmortems
+E: A postmortem is a structured learning review after an incident. ShopStream needs to explain how system conditions and decisions produced harm, then reduce recurrence and improve detection and recovery. Blameless review examines context without pretending mistakes or accountability do not exist.
+A: An aviation investigation studies instruments, procedures, training, weather, and design instead of ending at 'the pilot made an error.' A useful explanation identifies changes that make the next operator more likely to succeed.
+M: Record impact, timeline, detection, response, technical mechanism, contributing factors, and what went well. Separate evidence from hypotheses and unresolved questions. Create prioritized actions with owners, due dates, and verification criteria. Review action completion and effectiveness, and share lessons with relevant teams.
+W: A migration broke old Pods during a rolling deployment. The review identifies a missing compatibility test, unclear migration ownership, and an unsafe drop-column procedure. Actions add mixed-version testing and expand-and-contract gates, each with a concrete failure case that must now be prevented.
+T: An incident report records events; a postmortem explains and improves the system. Root-cause analysis can be useful, but a single 'root cause' often oversimplifies interacting technical and organizational conditions. More documentation alone is rarely a sufficient corrective action.
+F: Blaming one person discourages evidence sharing. Vague actions such as 'be more careful' cannot be verified. Producing many low-value tasks can hide the few controls that would materially reduce risk.
+D: Separate prevention, detection, mitigation, and recovery improvements. Some failures cannot be prevented economically, but their blast radius and duration can be reduced. Re-run the relevant scenario after changes and measure whether the intended defense actually works.
+X: Complete the supplied postmortem template for the migration incident. Write one action in each of prevention, detection, mitigation, and recovery. Reject any action without an owner and a testable completion condition.
+V: Service stabilized|Collect evidence and timeline|Mechanism supported by evidence?|Explain contributing conditions|Record uncertainty and investigate|Assign verifiable improvements|Rehearse and review effectiveness
+R: 63,87,109,110
+L: incident_drill.py

@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Browser"]
+  N1["CDN / WAF"]
+  N2["Gateway"]
+  N3["Application"]
+  N4["Restricted database"]
+  N5["Secret manager"]
+  N0 -->|TLS| N1
+  N1 -->|filtered request| N2
+  N2 -->|authenticated call| N3
+  N3 -->|bound SQL| N4
+  N3 -.->|workload identity| N5

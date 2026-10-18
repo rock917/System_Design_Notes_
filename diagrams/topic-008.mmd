@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Desired replicas submitted"]
+  N1["Reconcile and schedule"]
+  N2{"Pod starts successfully?"}
+  N3["Run probes"]
+  N4["Report events and retry"]
+  N5["Publish ready endpoints"]
+  N6["Route service traffic"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

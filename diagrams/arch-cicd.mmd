@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Source revision"]
+  N1["Build and test"]
+  N2["Artifact registry"]
+  N3["Staging"]
+  N4["Canary"]
+  N5["Production"]
+  N0 -->|inputs| N1
+  N1 -->|digest| N2
+  N2 -->|same bytes| N3
+  N3 -->|verified promotion| N4
+  N4 -->|guardrails pass| N5

@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as Job API
+  participant P2 as Worker
+  participant P3 as Store
+  P0->>P1: Submit idempotent job
+  P1->>P3: Commit job and outbox
+  P1->>P0: 202 job ID
+  P1->>P2: Dispatch leased attempt
+  P2->>P3: Write result with fencing token
+  P3->>P2: Durable completion
+  P2->>P1: Acknowledge completion
+  P0->>P1: Poll authorized result

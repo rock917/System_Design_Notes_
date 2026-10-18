@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Uploader
+  participant P1 as Metadata
+  participant P2 as Worker
+  participant P3 as Storage
+  P0->>P1: Complete uploaded object
+  P1->>P3: Verify source checksum
+  P1->>P2: Schedule rendition job
+  P2->>P3: Write immutable renditions
+  P3->>P2: Stored checksums
+  P2->>P1: All required outputs valid
+  P1->>P3: Publish versioned manifest
+  P1->>P0: Ready for authorized playback

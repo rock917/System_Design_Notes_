@@ -1,0 +1,13 @@
+stateDiagram-v2
+  state "Pending" as S0
+  state "Confirmed" as S1
+  state "Declined" as S2
+  state "Unknown" as S3
+  state "Refund pending" as S4
+  [*] --> S0
+  S0 --> S1: provider confirms
+  S0 --> S2: provider declines
+  S0 --> S3: response lost
+  S3 --> S1: reconcile success
+  S3 --> S2: reconcile failure
+  S1 --> S4: approved compensation

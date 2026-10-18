@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Schedule becomes due"]
+  N1["Create business run ID"]
+  N2{"Run already completed?"}
+  N3["Skip duplicate trigger"]
+  N4["Claim bounded ownership"]
+  N5["Execute with checkpoints"]
+  N6["Record completion or retry"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

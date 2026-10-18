@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Component sends data"]
+  N1["Choose authenticated transport"]
+  N2{"Peer identity verified?"}
+  N3["Transmit encrypted records"]
+  N4["Abort insecure connection"]
+  N5["Decrypt only at intended endpoint"]
+  N6["Protect next hop separately"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Backup schedule triggers"]
+  N1["Capture consistent data and logs"]
+  N2{"Copy verified and protected?"}
+  N3["Retain across failure domains"]
+  N4["Retry and alert backup gap"]
+  N5["Restore in isolated drill"]
+  N6["Validate recoverability and expiry"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Producer"]
+  N1["Broker queue"]
+  N2["Worker"]
+  N3["Local effect store"]
+  N4["Retry scheduler"]
+  N5["DLQ"]
+  N0 -->|publish| N1
+  N1 -->|deliver| N2
+  N2 -->|commit effect| N3
+  N2 -.->|transient failure| N4
+  N4 -.->|retry| N1
+  N2 -.->|exhausted| N5

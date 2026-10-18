@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Replicas lose communication"]
+  N1["Identify operation guarantee"]
+  N2{"Requires linearizable result?"}
+  N3["Wait or reject without quorum"]
+  N4["Serve permitted weaker view"]
+  N5["Reconcile after partition"]
+  N6["Restore normal contract"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

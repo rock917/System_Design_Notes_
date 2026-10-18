@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Caller"]
+  N1["Intent API"]
+  N2["Intent DB + outbox"]
+  N3["Priority queues"]
+  N4["Provider adapter"]
+  N5["Delivery callback"]
+  N0 -->|notification key| N1
+  N1 -->|durable intent| N2
+  N2 -->|channel work| N3
+  N3 -->|rate-limited send| N4
+  N4 -->|provider status| N5
+  N5 -->|deduplicated update| N2

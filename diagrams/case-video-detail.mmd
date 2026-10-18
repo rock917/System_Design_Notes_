@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Uploader"]
+  N1["Upload metadata API"]
+  N2["Object storage"]
+  N3["Transcode workers"]
+  N4["Published manifest"]
+  N5["CDN viewers"]
+  N0 -->|session request| N1
+  N0 -->|scoped upload| N2
+  N1 -->|job| N3
+  N3 -->|renditions| N2
+  N3 -->|verified publication| N4
+  N4 -->|playback| N5
+  N2 -->|cached segments| N5

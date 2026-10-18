@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Client request"]
+  N1["Discover eligible backends"]
+  N2{"Healthy capacity available?"}
+  N3["Select backend"]
+  N4["Reject or shed load"]
+  N5["Forward with deadline"]
+  N6["Return response"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

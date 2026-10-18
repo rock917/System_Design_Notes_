@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Caller needs service"]
+  N1["Resolve logical name"]
+  N2{"Usable endpoints found?"}
+  N3["Choose ready instance"]
+  N4["Use allowed stale list or fail"]
+  N5["Connect with deadline"]
+  N6["Refresh after change"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

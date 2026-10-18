@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Client requests HTTP connection"]
+  N1["Negotiate supported protocol"]
+  N2{"HTTP3 path available and permitted?"}
+  N3["Use QUIC streams over UDP"]
+  N4["Use supported HTTP over TCP"]
+  N5["Apply flow congestion and HTTP semantics"]
+  N6["Measure actual user outcome"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

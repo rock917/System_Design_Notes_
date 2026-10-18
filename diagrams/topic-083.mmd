@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Major outage declared"]
+  N1["Assess scope and recovery point"]
+  N2{"Trusted recovery path available?"}
+  N3["Restore or activate standby"]
+  N4["Escalate and preserve evidence"]
+  N5["Validate data and user journeys"]
+  N6["Resume with measured RTO and RPO"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

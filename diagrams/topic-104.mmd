@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Infrastructure change committed"]
+  N1["Validate and preview desired diff"]
+  N2{"Change reviewed and scoped correctly?"}
+  N3["Apply through controlled identity"]
+  N4["Revise unsafe or unexpected plan"]
+  N5["Verify live state and drift"]
+  N6["Record reproducible recovery inputs"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

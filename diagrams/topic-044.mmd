@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Work arrives"]
+  N1["Inspect queue and in-flight budget"]
+  N2{"Capacity available?"}
+  N3["Admit bounded work"]
+  N4["Wait reject or drop by contract"]
+  N5["Consumer signals released capacity"]
+  N6["Propagate demand upstream"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

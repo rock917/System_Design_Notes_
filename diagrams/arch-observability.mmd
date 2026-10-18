@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Application"]
+  N1["Metrics endpoint"]
+  N2["Log shipper"]
+  N3["Trace exporter"]
+  N4["Collector"]
+  N5["Query and alerts"]
+  N0 -->|counts| N1
+  N0 -->|events| N2
+  N0 -->|spans| N3
+  N1 -->|scrape| N4
+  N2 -->|batch| N4
+  N3 -->|batch| N4
+  N4 -->|bounded telemetry| N5

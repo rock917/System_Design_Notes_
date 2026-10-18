@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Request reaches edge"]
+  N1["Evaluate privacy and key"]
+  N2{"Response safely reusable?"}
+  N3["Serve or revalidate cache"]
+  N4["Bypass shared cache"]
+  N5["Apply freshness policy"]
+  N6["Return scoped representation"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

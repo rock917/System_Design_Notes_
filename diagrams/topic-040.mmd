@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Operation waits for lock"]
+  N1["Build wait-for dependencies"]
+  N2{"Cycle detected?"}
+  N3["Abort selected victim"]
+  N4["Continue bounded waiting"]
+  N5["Release resources as progress resumes"]
+  N6["Restore progress"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

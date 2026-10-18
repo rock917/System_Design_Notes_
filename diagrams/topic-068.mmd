@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Protected operation requested"]
+  N1["Authenticate principal"]
+  N2{"Policy and ownership allow action?"}
+  N3["Execute scoped operation"]
+  N4["Deny with safe response"]
+  N5["Audit sensitive decision"]
+  N6["Review and expire privileges"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

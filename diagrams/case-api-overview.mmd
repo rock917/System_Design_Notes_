@@ -1,0 +1,8 @@
+flowchart TD
+  N0["Tenant client"]
+  N1["Rate-limited API service boundary"]
+  N2["Durable authoritative state"]
+  N3["External delivery or processing"]
+  N0 -->|intent / result| N1
+  N1 -->|state contract| N2
+  N1 -->|explicit dependency| N3

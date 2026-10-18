@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Request starts"]
+  N1["Compute remaining budget"]
+  N2{"Time remains?"}
+  N3["Run bounded operation"]
+  N4["Return deadline exceeded"]
+  N5["Cancel and release on expiry"]
+  N6["Return known or unknown outcome"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

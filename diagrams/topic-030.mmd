@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Data operation"]
+  N1["Extract shard key"]
+  N2{"Ownership known and current?"}
+  N3["Route to owning shard"]
+  N4["Refresh routing or fail safely"]
+  N5["Execute local transaction"]
+  N6["Merge only necessary results"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

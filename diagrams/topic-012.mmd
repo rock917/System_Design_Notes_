@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Attempt fails"]
+  N1["Classify error and replay safety"]
+  N2{"Retry budget remains?"}
+  N3["Wait with jitter"]
+  N4["Stop and report outcome"]
+  N5["Repeat same operation ID"]
+  N6["Return or exhaust deadline"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

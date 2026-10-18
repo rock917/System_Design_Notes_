@@ -1,0 +1,15 @@
+flowchart TD
+  N0["User request routed by region"]
+  N1["Determine data owner and policy"]
+  N2{"Local or safe remote authority available?"}
+  N3["Serve under defined consistency"]
+  N4["Degrade or initiate fenced failover"]
+  N5["Replicate and reconcile changes"]
+  N6["Validate regional independence"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

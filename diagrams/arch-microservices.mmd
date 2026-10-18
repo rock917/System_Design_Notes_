@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Gateway"]
+  N1["Catalog service"]
+  N2["Orders service"]
+  N3["Catalog store"]
+  N4["Orders store"]
+  N5["Payment adapter"]
+  N0 -->|browse| N1
+  N0 -->|checkout| N2
+  N1 -->|local data| N3
+  N2 -->|local data| N4
+  N2 -->|operation ID| N5

@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Caller
+  participant P1 as Service
+  participant P2 as Worker
+  participant P3 as Provider
+  P0->>P1: Create notification intent
+  P1->>P0: 202 durable acceptance
+  P1->>P2: Deliver queued intent
+  P2->>P3: Send with stable key
+  P3-->>P2: Temporary failure
+  P2->>P3: Retry under deadline
+  P3->>P1: Signed delivery callback
+  P1->>P0: Status query result

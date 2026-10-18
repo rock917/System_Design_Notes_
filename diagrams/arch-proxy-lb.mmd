@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Client"]
+  N1["Reverse proxy / LB"]
+  N2["API replica A"]
+  N3["API replica B"]
+  N4["Session store"]
+  N5["Database"]
+  N0 -->|HTTPS| N1
+  N1 -->|eligible route| N2
+  N1 -->|eligible route| N3
+  N2 -->|session| N4
+  N3 -->|session| N4
+  N2 -->|query| N5
+  N3 -->|query| N5

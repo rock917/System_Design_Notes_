@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Order publisher"]
+  N1["Event topic"]
+  N2["Notification subscription"]
+  N3["Analytics subscription"]
+  N4["Email worker"]
+  N5["Projection worker"]
+  N0 -->|OrderPlaced| N1
+  N1 -->|copy| N2
+  N1 -->|copy| N3
+  N2 -->|deliver| N4
+  N3 -->|deliver| N5

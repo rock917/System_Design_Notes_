@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Client"]
+  N1["Order API"]
+  N2["Order DB + outbox"]
+  N3["Event relay"]
+  N4["Job worker"]
+  N5["Status API"]
+  N0 -->|command| N1
+  N1 -->|commit| N2
+  N2 -->|pending event| N3
+  N3 -->|job| N4
+  N4 -->|terminal state| N2
+  N0 -->|poll| N5
+  N5 -->|read status| N2

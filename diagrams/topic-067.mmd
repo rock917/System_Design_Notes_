@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Workload needs credential"]
+  N1["Authenticate workload identity"]
+  N2{"Policy permits secret access?"}
+  N3["Retrieve short-lived value"]
+  N4["Deny and audit"]
+  N5["Use without logging then rotate"]
+  N6["Revoke expired or exposed secret"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

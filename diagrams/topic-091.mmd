@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Operation starts"]
+  N1["Measure each phase with clear boundary"]
+  N2{"Dominant delay identified?"}
+  N3["Optimize critical measured phase"]
+  N4["Add timing or profile evidence"]
+  N5["Retest representative distribution"]
+  N6["Check end-to-end user improvement"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

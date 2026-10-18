@@ -1,0 +1,20 @@
+{
+  "html_validation": "HTML parsed, local links and anchors audited, referenced PNGs decoded. Browser runtime and visual inspection unavailable.",
+  "browser_attempts": [
+    "Playwright-managed Chromium executable unavailable.",
+    "Installed Microsoft Edge failed to launch successfully in the sandbox."
+  ],
+  "mermaid_engine": "Unavailable; exported-subset structural checks passed.",
+  "kubernetes_yaml": {
+    "command": "kubectl kustomize work/k8s-validation",
+    "exit_code": 0,
+    "objects": [
+      "ConfigMap",
+      "Service",
+      "Deployment",
+      "HorizontalPodAutoscaler"
+    ],
+    "scope": "Local YAML parse and Kustomize serialization only; no API schema validation or cluster apply.",
+    "source_sha256": "f960d3bbaf04a97beb6fe24c0e5800469541212d3fd5cc2d2e0cb380e16297f0"
+  }
+}

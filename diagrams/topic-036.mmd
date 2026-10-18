@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Read row and version"]
+  N1["Compute change"]
+  N2{"Version still matches atomically?"}
+  N3["Commit and increment version"]
+  N4["Reload or report conflict"]
+  N5["Return new version"]
+  N6["Preserve invariant"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["New revision declared"]
+  N1["Start surge within limits"]
+  N2{"New instance ready?"}
+  N3["Route traffic and drain old"]
+  N4["Pause progress and diagnose"]
+  N5["Terminate old gracefully"]
+  N6["Repeat until desired revision"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

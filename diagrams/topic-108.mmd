@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Dependency change proposed"]
+  N1["Resolve graph in isolated environment"]
+  N2{"Versions and platform compatible?"}
+  N3["Lock and test full artifact"]
+  N4["Adjust constraints or isolate workload"]
+  N5["Review integrity and security evidence"]
+  N6["Update with rollback record"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

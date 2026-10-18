@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Traffic surge detected"]
+  N1["Identify exhausted resource and source pattern"]
+  N2{"Useful demand can be admitted safely?"}
+  N3["Prioritize and serve bounded traffic"]
+  N4["Filter upstream or shed at boundary"]
+  N5["Monitor collateral user impact"]
+  N6["Recover normal policy gradually"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

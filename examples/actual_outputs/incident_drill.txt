@@ -1,0 +1,10 @@
+09:00 Release B reaches 25% of checkout traffic.
+09:04 B P99 rises; database CPU remains low; pool acquisition wait rises.
+09:06 Traces show B holds a DB connection while awaiting the payment provider.
+09:08 Feature flag disables the new path; no schema contraction occurred.
+09:12 Success and latency recover; 14 payment outcomes remain unknown.
+09:20 Provider operation-ID reconciliation resolves all 14 outcomes.
+At 09:12 complete: False
+At 09:20 complete: True
+Action: add a test proving DB connections are released before provider I/O.
+Owner: checkout team. Verification: failure-injected integration test plus rollout telemetry.

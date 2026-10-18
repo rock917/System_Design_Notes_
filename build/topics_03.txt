@@ -1,0 +1,216 @@
+@@42|Garbage Collection
+E: Garbage collection reclaims memory that a program can no longer reach. It reduces manual memory-management work, but it does not decide whether reachable objects are still useful. ShopStream still needs bounded caches, explicit connection cleanup, and monitoring for allocation pressure.
+A: A cleaner removes documents that no active filing list references. Documents on an obsolete but still registered list remain. The analogy explains reachability, though real collectors also manage generations, relocation, and concurrency.
+M: A tracing collector starts from roots such as stacks and globals, marks reachable objects, and reclaims unmarked ones. Generational collectors exploit many objects dying young. Some compact memory; some perform substantial work concurrently with barriers that track mutations. Reference counting reclaims objects when counts reach zero but needs additional handling for cycles; CPython combines mechanisms whose details vary by version and build.
+W: A request creates temporary parsed objects, returns, and releases references. They become reclaimable. A global cache retains the parsed object, so collection cannot remove it. High allocation rate can cause frequent collections even without a leak.
+T: Automatic collection improves safety but consumes CPU and may introduce pauses. Manual management offers control with use-after-free and leak risks. Runtime and collector choice change the latency profile; there is no universal pause bound.
+F: Calling collect on every request can worsen latency. Assuming free heap equals lower process resident memory ignores allocators and operating-system behavior. Files, sockets, and locks need deterministic cleanup rather than waiting for object reclamation.
+D: Pause time can correlate with P99 latency and expired distributed leases. Measure allocation rate, live heap after collection, pause histograms, and CPU overhead together. Reduce avoidable object churn before tuning obscure collector parameters.
+X: Create a reference cycle and inspect reclamation in the Python lab. Retain one root and explain why collection cannot free it. Correlate synthetic pauses with request latency while preserving the distinction between a leak and allocation churn.
+V: Allocation pressure rises|Find reachable objects|Object still reachable?|Retain live object|Reclaim unreachable memory|Update allocator state|Continue with measured overhead
+R: 38,41,43,93
+L: concurrency.py
+@@43|Thread Safety
+E: Thread-safe code preserves its contract when several threads call it concurrently. ShopStream may share a connection pool or cache across request threads. A container can be safe for individual operations while a sequence such as check-then-insert remains unsafe.
+A: A shared laboratory instrument has booking rules so users cannot change its settings simultaneously. Protecting the sign-in book does not automatically protect the experiment that follows it.
+M: Define shared state and its invariant. Prefer immutable values and ownership transfer. Where sharing is required, protect compound operations with locks, use atomic primitives with correct memory semantics, or communicate through thread-safe queues. Keep critical sections small and avoid invoking unknown callbacks while holding locks. Document reentrancy and lock order.
+W: Two threads both check that a key is absent and then initialize it. A thread-safe dictionary alone may not make the combined operation atomic. A lock around the full initialization or a suitable atomic get-or-create abstraction prevents duplicate setup.
+T: Threads share memory and suit some I/O workloads. Processes isolate memory but require serialization and communication. Async tasks can also race across await points even on one thread. Language runtime behavior does not replace an invariant-level design.
+F: Holding a lock during slow network I/O serializes unrelated requests. Returning a mutable internal reference defeats encapsulation. Testing under one interpreter build does not prove safety across other runtimes or free-threaded configurations.
+D: Fine-grained locking improves concurrency but complicates ordering and debugging. Lock-free algorithms require careful memory reclamation and ordering, not simply removing locks. Start with a correct simple design and profile before pursuing advanced synchronization.
+X: Protect a compound cache initialization and count actual constructions. Insert an await between read and write to illustrate an async logical race. Design ownership rules for a model object whose inference library may or may not support concurrent calls.
+V: Concurrent call begins|Identify shared mutable state|Invariant protected?|Execute coordinated operation|Acquire lock or transfer ownership|Release resources reliably|Return consistent result
+R: 39,40,42,44
+L: concurrency.py
+@@44|Backpressure
+E: Backpressure makes a slow downstream stage constrain upstream production. If ShopStream accepts jobs faster than workers can finish them, queues and latency grow. A bounded system must eventually wait, reject, drop permitted work, or reduce input quality.
+A: A conveyor belt stops upstream loading when the next station is full. Adding an infinitely long belt only hides the mismatch while products become late. Software queues have the same limitation.
+M: Bound queue length, in-flight requests, and per-client buffers. Propagate demand or available capacity upstream. Choose a policy per workload: block briefly, return 429/503, defer durably, or drop explicitly disposable events. Track oldest age and enforce deadlines so expired work does not consume scarce capacity.
+W: Inference receives 120 requests/second and completes 100. A 1,000-request queue fills in 50 seconds from empty under these assumptions. Adding workers helps only if CPU/GPU, memory, and downstream quotas support the extra concurrency.
+T: Rate limits bound arrivals over time; backpressure reacts to current capacity. Autoscaling adds capacity after a delay. Queues smooth bursts but cannot stabilize sustained arrival above service rate. Admission control should protect latency-sensitive work from bulk jobs.
+F: Unbounded asyncio tasks move the queue into memory. Dropping payment jobs silently violates durability. Blocking while holding a database connection can cause a circular resource wait. Put admission before expensive resource acquisition.
+D: In a multi-stage pipeline, the narrowest effective stage controls throughput. Increasing batch size may improve GPU efficiency while increasing wait time and memory. Separate interactive and batch queues, cap batch delay, and monitor per-class fairness.
+X: Run the queue-growth simulation and calculate time to fill. Introduce a fixed concurrency limit and observe rejected work rather than memory growth. Design two priority classes without starving lower-priority jobs indefinitely.
+V: Work arrives|Inspect queue and in-flight budget|Capacity available?|Admit bounded work|Wait reject or drop by contract|Consumer signals released capacity|Propagate demand upstream
+R: 1,15,28,45
+L: concurrency.py
+@@45|Autoscaling
+E: Autoscaling changes capacity in response to demand or schedules. ShopStream can add API replicas during a sale, but new capacity takes time to start. Scaling is a feedback controller whose delays and signals determine stability.
+A: A supermarket opens checkout lanes when queues grow. Hiring a cashier takes time, and opening lanes does not help if the card-payment terminal is the bottleneck. Capacity must target the limiting resource.
+M: Choose a workload-related signal, target utilization or backlog per worker, calculate desired capacity, respect minimum/maximum bounds, and stabilize scale-down. Account for readiness delay and cold starts. Kubernetes HPA behavior depends on metric availability, resource requests, and configured policies. Reserve database connection and downstream budgets across maximum replicas.
+W: Four workers each complete an assumed 25 jobs/second. Demand rises to 150 jobs/second. Six are needed just to match demand; more may be required for headroom and draining backlog. If startup takes two minutes, 6,000 excess jobs can accumulate at a 50/second deficit.
+T: Reactive scaling follows observed demand; scheduled scaling anticipates known peaks. CPU works for CPU-bound tasks but may miss queueing or blocked I/O. GPU memory and batching behavior complicate linear replica assumptions.
+F: Scaling on high latency alone can worsen an overloaded database. Missing metrics should not be interpreted as zero demand. Rapid scale-down creates oscillation and cold-start penalties. Track desired, ready, and actually serving capacity separately.
+D: A stable controller includes hysteresis, cooldown or stabilization, and explicit limits. Scale tests should include burst slope, startup distribution, quota exhaustion, and dependency capacity. Availability requires enough warm headroom for failures before the controller reacts.
+X: Calculate replicas from arrival rate and measured service rate, then add failure headroom. Simulate a startup delay and backlog. Design an inference policy using queue age plus GPU utilization without treating 100% utilization as the sole objective.
+V: Observe demand and saturation|Compute target capacity|Change exceeds policy thresholds?|Add or remove bounded replicas|Keep current capacity|Wait for readiness and stabilize|Measure effect
+R: 8,28,44,46
+L: concurrency.py
+@@46|Horizontal Scaling
+E: Horizontal scaling adds machines or process instances. ShopStream can spread independent requests across API replicas. It works best when state and coordination are designed for multiple workers; duplicating a process does not automatically distribute its state correctly.
+A: A bakery opens more checkout counters. Customers move faster if checkout is the bottleneck, but all counters still depend on the same oven. Shared dependencies set the eventual limit.
+M: Externalize durable state, make requests safely repeatable, distribute traffic, partition or coordinate background work, and cap aggregate dependency usage. Identify local caches and sessions that become inconsistent across replicas. Measure scale efficiency as throughput improvement divided by added resources at a fixed latency target.
+W: One API process handles an assumed 200 requests/second. Four might approach 800 only if database, network, locks, and load distribution permit it. If the database saturates at 500, API replicas cannot exceed that useful throughput without changing the bottleneck.
+T: Horizontal scaling offers fault isolation and incremental capacity but adds distributed coordination. Vertical scaling is simpler within one host's limits. A modular monolith can scale horizontally; microservices are not a prerequisite.
+F: Local file uploads disappear from requests routed to another replica. In-process schedulers duplicate work. Per-pod quotas multiply global budgets. Inventory every local state item before increasing replica count.
+D: Amdahl's Law bounds speedup when a fraction of work remains serial: speedup=1/(s+(1-s)/N). With s=0.1 and N=10, maximum modeled speedup is about 5.26, even before communication overhead. Measure the serial fraction rather than assuming linear scaling.
+X: Model throughput with a shared database ceiling. List which ShopStream state can be local, shared, or partitioned. Design a two-replica deployment and verify session continuity, upload access, and one logical scheduled job.
+V: Demand exceeds current capacity|Locate parallelizable work|Shared bottleneck has headroom?|Add interchangeable replicas|Improve or partition bottleneck|Balance and coordinate state|Measure scaling efficiency
+R: 3,30,45,47
+L: algorithms.py
+@@47|Vertical Scaling
+E: Vertical scaling gives one machine more CPU, memory, storage performance, or accelerator capacity. ShopStream may gain substantial headroom by upgrading a database server. This is often simpler than immediately introducing sharding or distributed coordination.
+A: Replacing a small oven with a larger one increases one kitchen's capacity. There is still one kitchen, and the larger oven may require downtime and a larger power supply.
+M: Profile the limiting resource, choose a larger resource class, estimate migration or restart impact, and benchmark the representative workload. More memory can improve cache residency; faster storage helps I/O-bound workloads; more cores help only parallel work. Check NUMA, licensing, connection settings, and storage limits where relevant.
+W: A database working set is an assumed 80 GB on a 32 GB host. Moving to 128 GB may reduce disk reads if the working set fits and caching behavior supports it. It does not fix a lock-serialized transaction or a missing query predicate.
+T: Vertical scaling simplifies state and operations but has finite ceilings and may preserve a large failure domain. Horizontal scaling offers additional replicas but introduces coordination. The two strategies can be combined.
+F: Buying more CPU for lock contention wastes money. Treating vendor size ratios as guaranteed throughput ratios ignores memory bandwidth and storage caps. Remeasure cost per useful operation and failover behavior after a resize.
+D: A larger primary can make recovery slower if backups, replica capacity, and restore bandwidth do not scale with it. Ensure the standby can carry the full workload and that maintenance windows and recovery targets remain realistic.
+X: Match CPU, memory, disk, and lock bottlenecks to suitable interventions. Compare two hypothetical sizes by cost per SLO-compliant request. Design a resize plan with rollback, replica compatibility, and post-change evidence.
+V: Capacity limit observed|Profile limiting resource|Larger host addresses bottleneck?|Resize through controlled change|Optimize workload instead|Benchmark and check recovery|Keep justified capacity
+R: 26,41,46,88
+L: performance.py
+@@48|CDN
+E: A content delivery network serves content from geographically distributed edge locations. ShopStream's product images and video segments can reach users without every request traveling to the origin. The CDN reduces distance and origin load, subject to cache policy and request routing.
+A: A publisher stocks popular books in local shops instead of shipping every copy from one warehouse. Rare books still come from the warehouse, and changing an edition requires managing old stock.
+M: DNS or another routing mechanism selects an edge. The edge checks a cache key and freshness policy, serves a hit, or retrieves from the origin and stores an allowed response. Use immutable versioned asset names, appropriate Cache-Control, compression, and origin access restrictions. Signed URLs or cookies can protect private content with carefully designed cache scope.
+W: /assets/app.ab12.js is cached for a long period because changing content creates a new filename. A personalized cart response is private and must not be shared across users. An origin outage may permit stale images but not stale authorization decisions.
+T: A CDN includes delivery infrastructure and routing; edge caching is one function. Dynamic requests can benefit from nearby termination and connection reuse even when uncacheable. Purge propagation and provider features vary, so verify actual contracts.
+F: Ignoring query strings or authorization context can leak private data. Purging everything during deployment creates an origin surge. Measure edge hit rate, origin fetch rate, regional latency, and errors independently.
+D: Cache hit ratio should be weighted by bytes or origin cost as well as requests. A few large uncached videos can dominate bandwidth. Multi-CDN designs reduce provider dependence but add routing, certificate, cache-policy, and observability complexity.
+X: Classify public images, account pages, and signed downloads by cacheability. Version a static asset and avoid broad purge. Estimate origin bandwidth with a stated byte hit ratio and test a cache-miss surge.
+V: User requests content|Route to nearby eligible edge|Fresh permitted cached object?|Serve edge object|Fetch protected origin|Store by explicit policy|Return and measure delivery
+R: 2,49,50,97
+L: protocols.py
+@@49|Edge Caching
+E: Edge caching stores reusable responses near users. It can accelerate public catalog data as well as static assets, but the cache key must capture every request dimension that changes the representation. Incorrect shared caching can become a data-isolation vulnerability.
+A: Local noticeboards keep copies of central announcements. A notice for one department must not appear under another department's label. The location is useful, but correct labeling and replacement rules are essential.
+M: Define cacheability, key dimensions, TTL, revalidation, and stale behavior. ETag or Last-Modified can support conditional origin checks. Vary describes selected request-header dimensions but does not replace deliberate privacy policy. Normalize only safe request components and prevent untrusted inputs from influencing a stored response outside the cache key.
+W: Product descriptions vary by locale, so language must affect the key or routing. A request carrying a session cookie must not accidentally receive a shared cart response. Stale-while-revalidate may serve an allowed old catalog entry while one refresh runs.
+T: Browser caches serve one client context, shared edge caches serve many users, and application caches store internal objects. Each has different invalidation, privacy, and observability boundaries. Revalidation saves transfer but still contacts the origin.
+F: Caching errors for too long prolongs incidents. Missing key dimensions creates cache poisoning or data leakage. Excessive dimensions destroy hit ratio. Test with two users, two locales, authorization changes, and deliberately different request headers.
+D: A correct cache key is effectively a declaration of functional inputs. For AI predictions, include model artifact version, preprocessing version, tenant, and relevant generation parameters; consider privacy, nondeterminism, and whether caching is permitted at all.
+X: Design a key for a localized product page. Compare full retrieval with an ETag revalidation. Create a two-user test proving that a private response never becomes visible through a shared edge entry.
+V: Request reaches edge|Evaluate privacy and key|Response safely reusable?|Serve or revalidate cache|Bypass shared cache|Apply freshness policy|Return scoped representation
+R: 2,48,50,76
+L: protocols.py
+@@50|Cache Invalidation
+E: Cache invalidation removes or supersedes copies after their source changes. ShopStream can tolerate an old product description briefly, but checkout must use a valid price and available inventory. Freshness must be defined per field and operation.
+A: A professor corrects an exam room on every noticeboard. Some boards may update late or receive an older notice afterward. Numbered revisions help distinguish the authoritative correction from stale copies.
+M: Choose TTL expiry, explicit delete, versioned keys, write-through, or event-driven invalidation. Commit source changes before announcing them, commonly through an outbox. Handle readers that started before the update and finish after invalidation. Version comparisons or source-version keys prevent stale repopulation where simple deletion is insufficient.
+W: Reader A fetches price version 5, writer B commits version 6 and deletes the cache, then A stores version 5. Deletion alone failed. Store versioned values with conditional replacement, change the authoritative key version, or enforce final validation at checkout.
+T: TTL provides simple bounded refresh behavior under stated assumptions. Event invalidation reduces normal staleness but can be delayed or lost without repair. Versioned immutable objects simplify correctness but need garbage collection of old versions.
+F: Broadcasting invalidations without delivery monitoring creates silent divergence. Clearing every key causes a stampede. A fixed TTL does not bound staleness if stale-on-error serving is unlimited. Document those policies separately.
+D: Cross-region invalidation is a distributed protocol with propagation delay and partition behavior. Strong freshness may require bypassing caches or checking authoritative versions. Use sequence numbers and periodic reconciliation for projections rather than promising instantaneous global purge.
+X: Reproduce the delayed-reader race with controlled barriers. Fix it using version checks. Define separate freshness contracts for product descriptions, displayed prices, and the amount actually charged.
+V: Source update commits|Publish versioned invalidation|Cache entry older than source?|Remove or supersede entry|Keep current or newer entry|Coalesce subsequent refresh|Verify freshness contract
+R: 2,17,35,49
+L: algorithms.py
+@@51|Feature Flags
+E: A feature flag chooses behavior at runtime without rebuilding the application. ShopStream can enable a new checkout for a small cohort and disable it quickly. The old and new paths must both remain safe and observable while the flag exists.
+A: A theater rehearses a new lighting arrangement for selected performances using a control switch. A switch cannot reverse scenery already demolished. Likewise, flags cannot undo irreversible data changes.
+M: Define an owner, purpose, default, expiry, and targeting rule. Evaluate consistently using a stable subject key, record the flag version in telemetry, and cache configuration with an explicit failure default. Restrict flag-edit permissions and audit changes. Remove obsolete flags and dead branches after rollout.
+W: Hash customer ID into 100 buckets and enable the new checkout for buckets below 5. The same customer stays in the cohort. If errors rise, disable the flag while preserving compatibility with orders already created by the new path.
+T: Deployment controls which code is present; flags control which behavior runs. Experiments need statistical design and guardrails beyond random routing. Release flags, operational kill switches, and permission controls have different lifecycle requirements.
+F: Randomly selecting per request creates inconsistent user experiences. Using a flag as the only authorization check is unsafe. Testing each flag independently misses interactions; reduce simultaneous flags and cover high-risk combinations.
+D: A flag service outage can become an application outage if every request depends on a live lookup. Use validated cached configuration and safe defaults. For model releases, include model version, eligibility, quality guardrails, and a rollback-compatible feature pipeline.
+X: Assign stable cohorts in the algorithms lab. Simulate missing configuration and verify the documented default. Design removal criteria and an expiry date for a temporary checkout flag, including data compatibility checks.
+V: Request arrives|Load validated flag configuration|Subject matches enabled cohort?|Execute new path|Execute established path|Record version and outcome|Retire flag after decision
+R: 53,55,68,102
+L: algorithms.py
+@@52|Blue-Green Deployment
+E: Blue-green deployment maintains two application environments and switches traffic from the current one to a prepared replacement. ShopStream can verify green while blue still serves users. A quick routing reversal helps recovery only if data and external effects remain compatible.
+A: A restaurant prepares a new dining room before moving guests. Both rooms may share one kitchen, so a kitchen change can break both rooms despite the separate entrances.
+M: Build one immutable artifact, deploy green, apply backward-compatible schema expansion, warm dependencies, run checks, switch a controlled portion or all routing, and drain blue. Keep blue available for a defined rollback window. Track environment identity and verify real user journeys after cutover.
+W: Blue uses column full_name; green supports both full_name and display_name during migration. Switching traffic back remains safe because the old column still exists and writes preserve compatibility. Dropping it before blue retires makes routing rollback ineffective.
+T: Blue-green can switch quickly and isolate application changes but may require near-double capacity. Canary gradually changes exposure. Rolling deployment replaces instances in place and usually uses less spare capacity.
+F: Forgetting long-lived connections leaves old traffic active. Two environments can run duplicate scheduled jobs. Shared databases and caches remain shared failure domains. Test worker ownership and environment-specific side effects before switching.
+D: Rollback is a business-state decision as well as a routing action. New code may create records old code cannot interpret or send irreversible notifications. Use expand-and-contract, versioned events, and explicit rollback boundaries.
+X: Draw blue and green sharing a database. Write cutover and reversal checks. Add a background scheduler and explain how to ensure one logical job while both environments are running.
+V: Prepare green environment|Verify artifact and compatibility|Green passes checks?|Switch traffic and drain blue|Keep blue serving|Observe rollback window|Retire old environment
+R: 6,53,54,55,81
+L: k8s.yaml
+@@53|Canary Releases
+E: A canary release exposes a change to a limited population before broad rollout. ShopStream can discover a checkout regression while only a small cohort is affected. The canary needs meaningful traffic and clear success criteria, not merely a timer.
+A: A chef serves a new recipe to a small tasting group. If the group contains only staff who never order the difficult dish, it cannot predict general customer experience. Representative cohorts matter.
+M: Define eligibility and stable assignment, deploy the candidate, compare it with a control over equivalent traffic, and monitor error, latency, saturation, and business outcomes. Require sufficient samples and observation windows. Promote in stages, stop on guardrail violation, and preserve artifact and configuration identities.
+W: Send 5% of eligible checkout traffic to version B. Compare P99, payment failure, and successful-order rates by version. A model canary also measures quality and harmful-output guardrails; fast HTTP 200 responses do not prove useful predictions.
+T: Canary reduces blast radius but increases comparison and routing complexity. Blue-green offers fast whole-environment switching. A/B experiments estimate product effects, while canaries primarily control release risk; either can use cohorts but their decision criteria differ.
+F: Comparing different customer populations creates confounding. A small sample cannot reliably estimate a rare P99 or error event. Shared dependencies can make both canary and control degrade, hiding the cause.
+D: Sequentially checking metrics until they look good can bias statistical conclusions. Use a predefined analysis policy and operational guardrails. For delayed outcomes such as fraud or recommendation quality, retain shadow evaluation and longer observation before full promotion.
+X: Define three guardrails and a minimum sample for checkout. Show why ten requests cannot support a stable P99 conclusion. Plan a model canary with latency, cost, quality, and rollback-compatible preprocessing.
+V: Candidate ready|Route stable small cohort|Guardrails pass with enough evidence?|Increase exposure|Stop and revert traffic|Continue comparative observation|Promote and archive evidence
+R: 51,52,55,93
+L: performance.py
+@@54|Rolling Deployments
+E: A rolling deployment replaces application instances gradually. ShopStream can keep serving while old and new versions coexist. That coexistence is the central compatibility requirement: APIs, events, caches, and database schemas must work for both versions.
+A: A bus company replaces vehicles one at a time while maintaining service. New and old buses must still use compatible stops and tickets during the transition.
+M: Define desired replicas, maximum unavailable capacity, and allowed surge. Start new instances, wait for startup and readiness, route traffic, then drain and stop old instances. Respect graceful termination and connection draining. Kubernetes progress and rollout status are evidence about orchestration, not a substitute for application-level success metrics.
+W: With four replicas, maxUnavailable=0 and maxSurge=1 permits a fifth Pod before an old one is removed. This requires capacity for the extra Pod and any additional database connections. If the new Pod never becomes ready, the rollout should stall safely.
+T: Rolling updates use less duplicate capacity than full blue-green but take longer and produce mixed versions. Recreate deployment is simpler but causes interruption. Canary controls exposure; a rolling deployment can still unintentionally expose many users quickly.
+F: Readiness passing before model loading completes sends traffic too early. A destructive schema migration breaks old Pods. Termination without draining interrupts requests. Test both old-reader/new-writer and new-reader/old-writer combinations.
+D: Long-running jobs need lease handoff or checkpointing independent of HTTP draining. A PodDisruptionBudget influences certain voluntary disruptions but is not a universal shield against failures or all rollout behavior. Inspect the actual controller and disruption semantics.
+X: Calculate peak Pods and connection budget for a surge. Force readiness failure and inspect rollout progress. Design a worker rollout that stops claiming new jobs, completes or checkpoints owned jobs, and safely hands them off.
+V: New revision declared|Start surge within limits|New instance ready?|Route traffic and drain old|Pause progress and diagnose|Terminate old gracefully|Repeat until desired revision
+R: 8,28,55,57,81
+L: k8s.yaml
+@@55|Rollbacks
+E: A rollback returns a system to a previously acceptable state after a harmful change. Switching application versions is only one part. ShopStream must consider configuration, schema, model artifacts, and irreversible effects produced since deployment.
+A: Reverting a recipe does not uncook meals already served. A software rollback likewise cannot erase sent emails, shipped parcels, or externally committed payments.
+M: Define rollback triggers and an owner before release. Preserve known-good artifacts and configuration, verify compatibility with current data, route or deploy the old version, and monitor recovery. Prefer forward repair when the old version cannot safely read new state. Record the decision and preserve incident evidence.
+W: A new order writer adds a nullable field while maintaining old fields. Reverting the API is safe. If it instead renames a required column and drops the old one, the previous binary fails; restore compatibility or roll forward rather than assuming an image rollback fixes it.
+T: Rollback can be fast when changes are reversible. Forward fixes may be safer for data transformations. Restoring a backup is disaster recovery with possible data loss and longer downtime, not an ordinary code rollback.
+F: Automatically reverting on a noisy single metric can oscillate versions. Forgetting cache or event schema changes creates delayed failures. Keep a compatibility matrix and test reversal in staging with representative data.
+D: Model rollback must bind model weights, tokenizer, feature schema, preprocessing, and serving configuration. A weight file alone may be incompatible. Separate service reliability recovery from delayed quality validation and keep both visible.
+X: Classify three changes as reversible, conditionally reversible, or irreversible. Revert a feature flag and verify existing records still work. Write a rollback runbook with evidence thresholds, stop conditions, and post-recovery checks.
+V: Regression detected|Identify change and data effects|Previous version compatible?|Restore known-good release|Apply controlled forward repair|Verify user recovery|Document residual effects
+R: 51,52,53,81,109
+L: k8s.yaml
+@@56|Health Checks
+E: A health check is a targeted observation used to decide whether a component can perform a particular role. ShopStream needs more than a process returning 200: a user must be able to browse and place a valid order. Different checks answer different questions.
+A: A car dashboard light confirms the engine is running, while a road test confirms the car can travel. One test cannot represent every aspect of service health.
+M: Define the consumer and action for each check: restart, route, alert, or synthetic validation. Use cheap local checks for frequent routing decisions and deeper synthetic transactions for user journeys. Bound check duration, avoid destructive side effects, and distinguish dependency degradation from local unrecoverable failure.
+W: /live confirms the event loop can respond. /ready confirms required startup is complete. A periodic synthetic order in an isolated test tenant checks routing, authorization, database, and workflow behavior, then cleans up according to a safe contract.
+T: Black-box checks observe outcomes from outside. White-box checks inspect internal state. Deep checks catch more failures but add load and dependencies; shallow checks are cheap but can report healthy while users fail.
+F: A database outage causing every liveness probe to fail restarts healthy applications and worsens recovery. An unrestricted diagnostic endpoint can expose internals. Restrict sensitive detail and return stable machine-readable status.
+D: Health is scoped and time-dependent. An instance may serve reads but not writes, or one tenant may fail while aggregate checks pass. Model degraded capabilities and monitor real traffic in addition to binary health endpoints.
+X: Define separate live, ready, and synthetic checks. Disconnect a dependency and predict each action. Design a safe synthetic checkout that exercises critical paths without charging a real customer or polluting business analytics.
+V: Health observation due|Evaluate scoped capability|Check succeeds within deadline?|Keep eligible status|Apply matching routing or alert action|Record reason and duration|Reevaluate with hysteresis
+R: 3,8,57,58
+L: inference_api.py
+@@57|Liveness and Readiness Probes
+E: Liveness asks whether restarting a container may help it recover. Readiness asks whether it should receive service traffic now. Startup probes give slow initialization a separate window before the other probes begin. These decisions must not be collapsed into one generic health test.
+A: A shop can be open for staff setup but not ready for customers. If the door lock jams, repair is needed; if shelves are still being stocked, repeatedly demolishing and rebuilding the shop makes things worse.
+M: Kubelet executes configured probes with periods, deadlines, and failure thresholds. Startup gates liveness and readiness until success. Readiness failure changes endpoint eligibility; it does not itself request a container restart. Liveness or startup failure can trigger restart according to the container restart policy. Service routing changes and existing connections have propagation nuances.
+W: A model takes 90 seconds to load. A startup probe with sufficient failure budget protects initialization. Once loaded, readiness becomes true. If a shared database briefly fails, a dependency-sensitive readiness policy may remove traffic, while local liveness should not restart every model loader.
+T: Process status, Pod phase, readiness, and application success are distinct. An HTTP probe is convenient, while TCP only checks connection acceptance and exec probes run a command with their own overhead and security considerations.
+F: Too-small timeouts under CPU throttling create false failures. Readiness tied to every optional dependency can remove all useful capacity. Exposing successful readiness before caches or models initialize sends users into cold failures.
+D: A readiness outage can shift load onto fewer Pods and trigger a cascade. Use thresholds, adequate headroom, and carefully scoped checks. Validate behavior under overload, slow startup, dependency outage, and graceful termination in a local cluster.
+X: Read the supplied probe values and compute the approximate startup allowance. Fail readiness and verify no restart is implied. Explain a restart loop caused by putting a remote database ping in liveness and redesign the probes.
+V: Container starts|Run startup probe|Startup completed?|Enable liveness and readiness|Retry then restart on failure policy|Route only when ready|Restart only for matching failure
+R: 8,45,54,56
+L: k8s.yaml
+@@58|Monitoring
+E: Monitoring continuously checks known indicators of service behavior. ShopStream needs to know whether requests fail, queues age, databases saturate, or costs spike. Monitoring turns measurements into an operating picture and actionable decisions.
+A: A pilot watches instruments chosen for safe flight. More gauges do not automatically improve decisions; each must have units, expected ranges, and an action when it changes.
+M: Define user journeys, collect service and resource signals, label them with bounded dimensions, aggregate over explicit windows, visualize trends, and connect actionable conditions to runbooks. Use traffic, errors, latency, and saturation together. Include synthetic probes and external dependency visibility.
+W: Checkout errors rise while CPU stays low. Queue wait and connection-pool acquisition time rise, pointing to a blocked database path rather than missing CPU. A dashboard organized by request path helps the operator test that hypothesis.
+T: Monitoring answers anticipated questions. Observability supports investigating unfamiliar internal states from telemetry. Logs provide events, metrics provide aggregate trends, and traces connect work across components; none replaces the others universally.
+F: Collecting hundreds of dashboards without ownership creates noise. High-cardinality labels such as user ID can overwhelm metric systems. Monitor the telemetry pipeline itself so missing data does not look like perfect health.
+D: Define signal freshness and expected reporting intervals. A drop in error count may mean traffic stopped or collection broke. Use denominators, absence detection, and client-side evidence before declaring recovery.
+X: Build a four-signal dashboard specification for checkout. Diagnose low CPU with high latency using pool wait and dependency timing. Define how to detect a stopped metrics collector without paging on every brief scrape miss.
+V: Service emits measurements|Collect with bounded labels|Data fresh and valid?|Evaluate user and resource trends|Investigate telemetry gap|Alert on actionable condition|Verify response and recovery
+R: 59,60,61,62,66
+L: performance.py
+@@59|Logging
+E: Logs are timestamped records of events and decisions. ShopStream can use them to reconstruct why a particular order failed. Useful logs contain context and safe identifiers, while avoiding secrets and unnecessary personal data.
+A: A laboratory notebook records observations and experiment IDs. A pile of unrelated sentences is hard to investigate, and writing private credentials in the notebook creates a new risk.
+M: Emit structured records with event name, severity, service version, trace ID, operation ID, and sanitized error category. Use consistent timestamps while allowing for clock skew. Buffer and ship with bounded memory and explicit loss policy. Apply access controls, retention, redaction, and sampling where justified.
+W: order.payment_unknown includes order_id, provider_operation_id, trace_id, and timeout phase. It omits card data and bearer tokens. An engineer joins that event to provider reconciliation and the order state transition without searching unstructured payload dumps.
+T: Logs offer detailed context but cost storage and query time. Metrics efficiently track rates. Traces describe causality and latency. Audit logs may need stronger integrity and retention controls than routine debugging logs.
+F: Logging entire request bodies leaks credentials and increases cost. Synchronous logging to a slow sink can stall requests. Newlines or control characters in untrusted strings can confuse plain-text logs; structured encoding reduces ambiguity.
+D: Sampling must preserve important errors and security events under a defined policy, yet an outage can produce a log flood. Use rate-aware controls and counters for suppressed events so investigators know evidence is incomplete. Restrict who can alter or delete audit trails.
+X: Emit and parse a structured event in the lab. Add a redaction test for tokens and passwords. Design an outage policy that bounds log volume while retaining incident correlation and a count of dropped records.
+V: Event occurs|Build structured safe context|Sensitive fields removed?|Emit bounded log record|Redact or reject unsafe fields|Ship with retention and access policy|Query by operation or trace
+R: 60,61,66,67,96
+L: security.py

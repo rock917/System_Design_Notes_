@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as Resolver
+  participant P2 as Proxy
+  participant P3 as Application
+  participant P4 as Database
+  P0->>P1: Resolve service name
+  P1->>P0: Address with cache policy
+  P0->>P2: Connect and negotiate TLS
+  P0->>P2: HTTP request
+  P2->>P3: Forward with deadline
+  P3->>P4: Authorized query
+  P4->>P3: Rows
+  P3->>P2: Response
+  P2->>P0: HTTP result

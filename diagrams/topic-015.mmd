@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Producer publishes"]
+  N1["Durably enqueue"]
+  N2{"Consumer succeeds?"}
+  N3["Commit then acknowledge"]
+  N4["Retry with bounded attempts"]
+  N5["Quarantine exhausted job"]
+  N6["Record terminal status"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.->|Exhausted| N5
+  N5 --> N6

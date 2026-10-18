@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Client sockets"]
+  N1["Connection servers"]
+  N2["Membership service"]
+  N3["Message history"]
+  N4["Delivery broker"]
+  N5["Recipient sockets"]
+  N0 -->|message ID| N1
+  N1 -->|authorize| N2
+  N1 -->|persist sequence| N3
+  N1 -->|fanout| N4
+  N4 -->|deliver| N5

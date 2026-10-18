@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Suspected primary failure"]
+  N1["Validate authority and candidate freshness"]
+  N2{"Safe promotion conditions met?"}
+  N3["Fence old owner and promote"]
+  N4["Remain unavailable or escalate"]
+  N5["Update routing and reconnect"]
+  N6["Verify and plan failback"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

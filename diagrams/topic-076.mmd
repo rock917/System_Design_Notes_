@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Browser cross-origin request"]
+  N1["Evaluate origin and optional preflight"]
+  N2{"Explicit browser-read policy permits?"}
+  N3["Return matching CORS headers"]
+  N4["Omit permission or reject preflight"]
+  N5["Authenticate actual API operation"]
+  N6["Browser enforces response access"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

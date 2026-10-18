@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Measure bad-event fraction"]
+  N1["Calculate remaining budget and burn"]
+  N2{"Policy threshold crossed?"}
+  N3["Change release and reliability priorities"]
+  N4["Continue measured delivery"]
+  N5["Observe changes and verify reliability"]
+  N6["Review policy with stakeholders"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Poll with last cursor"]
+  N1["Check event history"]
+  N2{"New event available?"}
+  N3["Return next events"]
+  N4["Wait until event or timeout"]
+  N5["Release waiter resources"]
+  N6["Client polls again"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

@@ -1,0 +1,5 @@
+concurrent replay order IDs: [1, 1, 1, 1]
+first event: True
+duplicate event: False
+row counts: {'orders': 1, 'operations': 1, 'outbox': 1, 'inbox': 1, 'notifications': 1}
+backup restores same counts: True

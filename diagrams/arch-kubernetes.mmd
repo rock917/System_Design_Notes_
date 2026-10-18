@@ -1,0 +1,12 @@
+flowchart TD
+  N0["API server"]
+  N1["Controllers"]
+  N2["Scheduler"]
+  N3["Kubelet / node"]
+  N4["Ready Pods"]
+  N5["Service endpoints"]
+  N0 -.->|desired state| N1
+  N0 -.->|unscheduled Pods| N2
+  N2 -.->|placement| N3
+  N3 -.->|start and probe| N4
+  N4 -.->|readiness| N5

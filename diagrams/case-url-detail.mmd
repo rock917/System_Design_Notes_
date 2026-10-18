@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Client"]
+  N1["Redirect / create API"]
+  N2["Mapping cache"]
+  N3["Links database"]
+  N4["Analytics queue"]
+  N5["Analytics worker"]
+  N0 -->|request| N1
+  N1 -->|lookup| N2
+  N1 -->|create or miss| N3
+  N1 -->|click event| N4
+  N4 -->|aggregate| N5

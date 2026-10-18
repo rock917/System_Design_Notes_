@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Read request"]
+  N1["Construct scoped key"]
+  N2{"Fresh entry exists?"}
+  N3["Return cached copy"]
+  N4["Read bounded origin"]
+  N5["Store with TTL"]
+  N6["Return result"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

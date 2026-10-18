@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant P0 as Sender
+  participant P1 as Receiver
+  participant P2 as Inbox DB
+  participant P3 as Worker
+  P0->>P1: Signed raw event with ID
+  P1->>P2: Verify then commit inbox event
+  P2->>P1: Durable acceptance
+  P1-->>P0: Response lost
+  P0->>P1: Retry same signed event ID
+  P1->>P2: Check duplicate ID
+  P2->>P1: Existing accepted event
+  P1->>P0: Successful acknowledgment
+  P2->>P3: Process accepted work idempotently

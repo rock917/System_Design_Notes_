@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Candidate ready"]
+  N1["Route stable small cohort"]
+  N2{"Guardrails pass with enough evidence?"}
+  N3["Increase exposure"]
+  N4["Stop and revert traffic"]
+  N5["Continue comparative observation"]
+  N6["Promote and archive evidence"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

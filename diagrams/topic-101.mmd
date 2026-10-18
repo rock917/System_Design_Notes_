@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Callback received"]
+  N1["Verify raw-body signature and freshness"]
+  N2{"Authentic allowed event?"}
+  N3["Durably record event ID"]
+  N4["Reject invalid callback"]
+  N5["Acknowledge then process idempotently"]
+  N6["Retry or reconcile unresolved work"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

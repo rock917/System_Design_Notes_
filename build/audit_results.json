@@ -1,0 +1,18 @@
+{
+  "counts": {
+    "topics": 111,
+    "teaching_sections": 1554,
+    "topic_questions": 1110,
+    "topic_exercises": 333,
+    "pngs": 194,
+    "svgs": 193,
+    "mermaid_sources": 177,
+    "local_links_checked": 7534,
+    "markdown_files": 11,
+    "html_files": 11,
+    "python_files_parsed": 10
+  },
+  "errors": [],
+  "warnings": [],
+  "mermaid_validation": "Strict exported-subset structure and all node/participant references checked; Mermaid engine unavailable."
+}

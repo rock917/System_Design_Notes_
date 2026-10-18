@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Browser
+  participant P1 as Login service
+  participant P2 as Identity store
+  participant P3 as Session store
+  P0->>P1: Submit credentials over TLS
+  P1->>P2: Verify using password-hash library
+  P2->>P1: Identity result
+  P1->>P3: Create new random session ID
+  P1->>P0: Secure HttpOnly cookie
+  P0->>P1: Cookie plus CSRF-bound mutation
+  P1->>P3: Load session and check expiry
+  P1->>P0: Authorized result or denial

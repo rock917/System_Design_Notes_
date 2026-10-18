@@ -1,0 +1,2552 @@
+[
+  {
+    "id": "topic-001",
+    "title": "1. Rate Limiting: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request arrives\" and move to \"Resolve tenant and cost\". At \"Enough tokens?\", the Yes branch goes to \"Consume atomically\" and the No branch goes to \"429 and retry hint\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      1
+    ],
+    "png": "topic-001.png",
+    "svg": "topic-001.svg",
+    "mermaid": "topic-001.mmd",
+    "number": 1
+  },
+  {
+    "id": "topic-002",
+    "title": "2. Caching: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Read request\" and move to \"Construct scoped key\". At \"Fresh entry exists?\", the Yes branch goes to \"Return cached copy\" and the No branch goes to \"Read bounded origin\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      2
+    ],
+    "png": "topic-002.png",
+    "svg": "topic-002.svg",
+    "mermaid": "topic-002.mmd",
+    "number": 2
+  },
+  {
+    "id": "topic-003",
+    "title": "3. Load Balancing: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client request\" and move to \"Discover eligible backends\". At \"Healthy capacity available?\", the Yes branch goes to \"Select backend\" and the No branch goes to \"Reject or shed load\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      3
+    ],
+    "png": "topic-003.png",
+    "svg": "topic-003.svg",
+    "mermaid": "topic-003.mmd",
+    "number": 3
+  },
+  {
+    "id": "topic-004",
+    "title": "4. Reverse Proxies: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"HTTPS request\" and move to \"Validate and normalize\". At \"Route permitted?\", the Yes branch goes to \"Forward to upstream\" and the No branch goes to \"Reject malformed request\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      4
+    ],
+    "png": "topic-004.png",
+    "svg": "topic-004.svg",
+    "mermaid": "topic-004.mmd",
+    "number": 4
+  },
+  {
+    "id": "topic-005",
+    "title": "5. API Gateways: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"API request\" and move to \"Verify caller and contract\". At \"Policy permits request?\", the Yes branch goes to \"Route to service\" and the No branch goes to \"Return 401 403 or 429\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      5
+    ],
+    "png": "topic-005.png",
+    "svg": "topic-005.svg",
+    "mermaid": "topic-005.mmd",
+    "number": 5
+  },
+  {
+    "id": "topic-006",
+    "title": "6. CI/CD: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Commit received\" and move to \"Build and verify\". At \"Checks pass?\", the Yes branch goes to \"Publish immutable artifact\" and the No branch goes to \"Stop and report\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      6
+    ],
+    "png": "topic-006.png",
+    "svg": "topic-006.svg",
+    "mermaid": "topic-006.mmd",
+    "number": 6
+  },
+  {
+    "id": "topic-007",
+    "title": "7. Docker: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Docker build\" and move to \"Create immutable layers\". At \"Runtime configuration valid?\", the Yes branch goes to \"Start isolated process\" and the No branch goes to \"Fail with diagnostics\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      7
+    ],
+    "png": "topic-007.png",
+    "svg": "topic-007.svg",
+    "mermaid": "topic-007.mmd",
+    "number": 7
+  },
+  {
+    "id": "topic-008",
+    "title": "8. Kubernetes: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Desired replicas submitted\" and move to \"Reconcile and schedule\". At \"Pod starts successfully?\", the Yes branch goes to \"Run probes\" and the No branch goes to \"Report events and retry\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      8
+    ],
+    "png": "topic-008.png",
+    "svg": "topic-008.svg",
+    "mermaid": "topic-008.mmd",
+    "number": 8
+  },
+  {
+    "id": "topic-009",
+    "title": "9. Service Discovery: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Caller needs service\" and move to \"Resolve logical name\". At \"Usable endpoints found?\", the Yes branch goes to \"Choose ready instance\" and the No branch goes to \"Use allowed stale list or fail\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      9
+    ],
+    "png": "topic-009.png",
+    "svg": "topic-009.svg",
+    "mermaid": "topic-009.mmd",
+    "number": 9
+  },
+  {
+    "id": "topic-010",
+    "title": "10. Circuit Breakers: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Call dependency\" and move to \"Read breaker state\". At \"Call permitted?\", the Yes branch goes to \"Attempt with deadline\" and the No branch goes to \"Fail fast or safe fallback\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      10
+    ],
+    "png": "topic-010.png",
+    "svg": "topic-010.svg",
+    "mermaid": "topic-010.mmd",
+    "number": 10
+  },
+  {
+    "id": "topic-011",
+    "title": "11. Timeouts: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request starts\" and move to \"Compute remaining budget\". At \"Time remains?\", the Yes branch goes to \"Run bounded operation\" and the No branch goes to \"Return deadline exceeded\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      11
+    ],
+    "png": "topic-011.png",
+    "svg": "topic-011.svg",
+    "mermaid": "topic-011.mmd",
+    "number": 11
+  },
+  {
+    "id": "topic-012",
+    "title": "12. Retries: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Attempt fails\" and move to \"Classify error and replay safety\". At \"Retry budget remains?\", the Yes branch goes to \"Wait with jitter\" and the No branch goes to \"Stop and report outcome\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      12
+    ],
+    "png": "topic-012.png",
+    "svg": "topic-012.svg",
+    "mermaid": "topic-012.mmd",
+    "number": 12
+  },
+  {
+    "id": "topic-013",
+    "title": "13. Exponential Backoff: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Retry approved\" and move to \"Calculate capped window\". At \"Deadline allows another attempt?\", the Yes branch goes to \"Sample jitter delay\" and the No branch goes to \"Stop retrying\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      13
+    ],
+    "png": "topic-013.png",
+    "svg": "topic-013.svg",
+    "mermaid": "topic-013.mmd",
+    "number": 13
+  },
+  {
+    "id": "topic-014",
+    "title": "14. Idempotency: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Mutation received\" and move to \"Look up scoped key\". At \"Completed matching request?\", the Yes branch goes to \"Replay stored response\" and the No branch goes to \"Claim key atomically\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      14
+    ],
+    "png": "topic-014.png",
+    "svg": "topic-014.svg",
+    "mermaid": "topic-014.mmd",
+    "number": 14
+  },
+  {
+    "id": "topic-015",
+    "title": "15. Message Queues: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Producer publishes\" and move to \"Durably enqueue\". At \"Consumer succeeds?\", the Yes branch goes to \"Commit then acknowledge\" and the No branch goes to \"Retry with bounded attempts\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      15
+    ],
+    "png": "topic-015.png",
+    "svg": "topic-015.svg",
+    "mermaid": "topic-015.mmd",
+    "number": 15
+  },
+  {
+    "id": "topic-016",
+    "title": "16. Pub/Sub: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Domain event created\" and move to \"Publish to topic\". At \"Subscription available?\", the Yes branch goes to \"Deliver independent copy\" and the No branch goes to \"Retain or reject per policy\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      16
+    ],
+    "png": "topic-016.png",
+    "svg": "topic-016.svg",
+    "mermaid": "topic-016.mmd",
+    "number": 16
+  },
+  {
+    "id": "topic-017",
+    "title": "17. Event-Driven Architecture: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Business command\" and move to \"Commit state and outbox\". At \"Transaction committed?\", the Yes branch goes to \"Relay event\" and the No branch goes to \"Discard uncommitted intent\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      17
+    ],
+    "png": "topic-017.png",
+    "svg": "topic-017.svg",
+    "mermaid": "topic-017.mmd",
+    "number": 17
+  },
+  {
+    "id": "topic-018",
+    "title": "18. Distributed Transactions: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Begin cross-system change\" and move to \"Ask participants to prepare\". At \"All prepared?\", the Yes branch goes to \"Persist commit decision\" and the No branch goes to \"Persist abort decision\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      18
+    ],
+    "png": "topic-018.png",
+    "svg": "topic-018.svg",
+    "mermaid": "topic-018.mmd",
+    "number": 18
+  },
+  {
+    "id": "topic-019",
+    "title": "19. Saga Pattern: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Start durable workflow\" and move to \"Reserve inventory\". At \"Payment confirmed?\", the Yes branch goes to \"Confirm order\" and the No branch goes to \"Reconcile or compensate\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      19
+    ],
+    "png": "topic-019.png",
+    "svg": "topic-019.svg",
+    "mermaid": "topic-019.mmd",
+    "number": 19
+  },
+  {
+    "id": "topic-020",
+    "title": "20. Dead Letter Queues: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Processing fails\" and move to \"Classify and count attempts\". At \"Retry still useful?\", the Yes branch goes to \"Schedule retry\" and the No branch goes to \"Move to DLQ with evidence\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      20
+    ],
+    "png": "topic-020.png",
+    "svg": "topic-020.svg",
+    "mermaid": "topic-020.mmd",
+    "number": 20
+  },
+  {
+    "id": "topic-021",
+    "title": "21. Cron Jobs: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Schedule becomes due\" and move to \"Create business run ID\". At \"Run already completed?\", the Yes branch goes to \"Skip duplicate trigger\" and the No branch goes to \"Claim bounded ownership\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      21
+    ],
+    "png": "topic-021.png",
+    "svg": "topic-021.svg",
+    "mermaid": "topic-021.mmd",
+    "number": 21
+  },
+  {
+    "id": "topic-022",
+    "title": "22. WebSockets: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client connects\" and move to \"Authenticate and authorize channel\". At \"Connection healthy?\", the Yes branch goes to \"Exchange framed messages\" and the No branch goes to \"Reconnect with cursor\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      22
+    ],
+    "png": "topic-022.png",
+    "svg": "topic-022.svg",
+    "mermaid": "topic-022.mmd",
+    "number": 22
+  },
+  {
+    "id": "topic-023",
+    "title": "23. Long Polling: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Poll with last cursor\" and move to \"Check event history\". At \"New event available?\", the Yes branch goes to \"Return next events\" and the No branch goes to \"Wait until event or timeout\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      23
+    ],
+    "png": "topic-023.png",
+    "svg": "topic-023.svg",
+    "mermaid": "topic-023.mmd",
+    "number": 23
+  },
+  {
+    "id": "topic-024",
+    "title": "24. Server-Sent Events: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Browser opens stream\" and move to \"Authenticate and set headers\". At \"Client can receive?\", the Yes branch goes to \"Send framed event and ID\" and the No branch goes to \"Cancel or bound backlog\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      24
+    ],
+    "png": "topic-024.png",
+    "svg": "topic-024.svg",
+    "mermaid": "topic-024.mmd",
+    "number": 24
+  },
+  {
+    "id": "topic-025",
+    "title": "25. Database Indexing: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"SQL predicate received\" and move to \"Estimate rows and access cost\". At \"Index path cheaper?\", the Yes branch goes to \"Traverse selected index\" and the No branch goes to \"Scan relevant table pages\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      25
+    ],
+    "png": "topic-025.png",
+    "svg": "topic-025.svg",
+    "mermaid": "topic-025.mmd",
+    "number": 25
+  },
+  {
+    "id": "topic-026",
+    "title": "26. Query Optimization: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Slow query observed\" and move to \"Capture plan and waits\". At \"Estimate matches reality?\", the Yes branch goes to \"Optimize measured bottleneck\" and the No branch goes to \"Refresh statistics and inspect skew\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      26
+    ],
+    "png": "topic-026.png",
+    "svg": "topic-026.svg",
+    "mermaid": "topic-026.mmd",
+    "number": 26
+  },
+  {
+    "id": "topic-027",
+    "title": "27. N+1 Queries: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Fetch parent list\" and move to \"Inspect relationship access\". At \"One query per item?\", the Yes branch goes to \"Collect IDs and batch\" and the No branch goes to \"Use existing bounded query\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      27
+    ],
+    "png": "topic-027.png",
+    "svg": "topic-027.svg",
+    "mermaid": "topic-027.mmd",
+    "number": 27
+  },
+  {
+    "id": "topic-028",
+    "title": "28. Connection Pooling: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request needs database\" and move to \"Acquire bounded pool slot\". At \"Slot before deadline?\", the Yes branch goes to \"Run short transaction\" and the No branch goes to \"Reject or defer request\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      28
+    ],
+    "png": "topic-028.png",
+    "svg": "topic-028.svg",
+    "mermaid": "topic-028.mmd",
+    "number": 28
+  },
+  {
+    "id": "topic-029",
+    "title": "29. Read Replicas: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Read request\" and move to \"Determine freshness requirement\". At \"Replica sufficiently current?\", the Yes branch goes to \"Read from replica\" and the No branch goes to \"Read primary or wait boundedly\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      29
+    ],
+    "png": "topic-029.png",
+    "svg": "topic-029.svg",
+    "mermaid": "topic-029.mmd",
+    "number": 29
+  },
+  {
+    "id": "topic-030",
+    "title": "30. Sharding: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Data operation\" and move to \"Extract shard key\". At \"Ownership known and current?\", the Yes branch goes to \"Route to owning shard\" and the No branch goes to \"Refresh routing or fail safely\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      30
+    ],
+    "png": "topic-030.png",
+    "svg": "topic-030.svg",
+    "mermaid": "topic-030.mmd",
+    "number": 30
+  },
+  {
+    "id": "topic-031",
+    "title": "31. Partitioning: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Query or insert\" and move to \"Evaluate partition key\". At \"Matching partition exists?\", the Yes branch goes to \"Route or prune partitions\" and the No branch goes to \"Reject or create controlled partition\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      31
+    ],
+    "png": "topic-031.png",
+    "svg": "topic-031.svg",
+    "mermaid": "topic-031.mmd",
+    "number": 31
+  },
+  {
+    "id": "topic-032",
+    "title": "32. Replication: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Leader commits change\" and move to \"Append and transmit log\". At \"Required acknowledgments reached?\", the Yes branch goes to \"Acknowledge according to policy\" and the No branch goes to \"Wait or fail within deadline\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      32
+    ],
+    "png": "topic-032.png",
+    "svg": "topic-032.svg",
+    "mermaid": "topic-032.mmd",
+    "number": 32
+  },
+  {
+    "id": "topic-033",
+    "title": "33. Leader Election: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Heartbeat missing\" and move to \"Start term and request votes\". At \"Majority with valid log?\", the Yes branch goes to \"Become leader\" and the No branch goes to \"Remain follower or retry\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      33
+    ],
+    "png": "topic-033.png",
+    "svg": "topic-033.svg",
+    "mermaid": "topic-033.mmd",
+    "number": 33
+  },
+  {
+    "id": "topic-034",
+    "title": "34. CAP Theorem: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Replicas lose communication\" and move to \"Identify operation guarantee\". At \"Requires linearizable result?\", the Yes branch goes to \"Wait or reject without quorum\" and the No branch goes to \"Serve permitted weaker view\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      34
+    ],
+    "png": "topic-034.png",
+    "svg": "topic-034.svg",
+    "mermaid": "topic-034.mmd",
+    "number": 34
+  },
+  {
+    "id": "topic-035",
+    "title": "35. Eventual Consistency: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Change committed\" and move to \"Propagate versioned update\". At \"Update newer or mergeable?\", the Yes branch goes to \"Apply deterministic merge\" and the No branch goes to \"Ignore stale or quarantine conflict\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      35
+    ],
+    "png": "topic-035.png",
+    "svg": "topic-035.svg",
+    "mermaid": "topic-035.mmd",
+    "number": 35
+  },
+  {
+    "id": "topic-036",
+    "title": "36. Optimistic Locking: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Read row and version\" and move to \"Compute change\". At \"Version still matches atomically?\", the Yes branch goes to \"Commit and increment version\" and the No branch goes to \"Reload or report conflict\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      36
+    ],
+    "png": "topic-036.png",
+    "svg": "topic-036.svg",
+    "mermaid": "topic-036.mmd",
+    "number": 36
+  },
+  {
+    "id": "topic-037",
+    "title": "37. Pessimistic Locking: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Begin transaction\" and move to \"Acquire required locks\". At \"Lock before deadline?\", the Yes branch goes to \"Read and modify protected rows\" and the No branch goes to \"Abort or retry safely\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      37
+    ],
+    "png": "topic-037.png",
+    "svg": "topic-037.svg",
+    "mermaid": "topic-037.mmd",
+    "number": 37
+  },
+  {
+    "id": "topic-038",
+    "title": "38. Distributed Locks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Worker requests ownership\" and move to \"Acquire lease and fencing token\". At \"Lease valid for work?\", the Yes branch goes to \"Write with token validation\" and the No branch goes to \"Stop or reacquire safely\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      38
+    ],
+    "png": "topic-038.png",
+    "svg": "topic-038.svg",
+    "mermaid": "topic-038.mmd",
+    "number": 38
+  },
+  {
+    "id": "topic-039",
+    "title": "39. Race Conditions: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Concurrent requests arrive\" and move to \"Identify shared invariant\". At \"Operation protected atomically?\", the Yes branch goes to \"Apply coordinated update\" and the No branch goes to \"Expose harmful interleaving\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      39
+    ],
+    "png": "topic-039.png",
+    "svg": "topic-039.svg",
+    "mermaid": "topic-039.mmd",
+    "number": 39
+  },
+  {
+    "id": "topic-040",
+    "title": "40. Deadlocks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Operation waits for lock\" and move to \"Build wait-for dependencies\". At \"Cycle detected?\", the Yes branch goes to \"Abort selected victim\" and the No branch goes to \"Continue bounded waiting\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      40
+    ],
+    "png": "topic-040.png",
+    "svg": "topic-040.svg",
+    "mermaid": "topic-040.mmd",
+    "number": 40
+  },
+  {
+    "id": "topic-041",
+    "title": "41. Memory Leaks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Memory rises over time\" and move to \"Measure heap and native usage\". At \"Growth exceeds expected working set?\", the Yes branch goes to \"Find retaining references\" and the No branch goes to \"Confirm bounded workload behavior\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      41
+    ],
+    "png": "topic-041.png",
+    "svg": "topic-041.svg",
+    "mermaid": "topic-041.mmd",
+    "number": 41
+  },
+  {
+    "id": "topic-042",
+    "title": "42. Garbage Collection: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Allocation pressure rises\" and move to \"Find reachable objects\". At \"Object still reachable?\", the Yes branch goes to \"Retain live object\" and the No branch goes to \"Reclaim unreachable memory\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      42
+    ],
+    "png": "topic-042.png",
+    "svg": "topic-042.svg",
+    "mermaid": "topic-042.mmd",
+    "number": 42
+  },
+  {
+    "id": "topic-043",
+    "title": "43. Thread Safety: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Concurrent call begins\" and move to \"Identify shared mutable state\". At \"Invariant protected?\", the Yes branch goes to \"Execute coordinated operation\" and the No branch goes to \"Acquire lock or transfer ownership\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      43
+    ],
+    "png": "topic-043.png",
+    "svg": "topic-043.svg",
+    "mermaid": "topic-043.mmd",
+    "number": 43
+  },
+  {
+    "id": "topic-044",
+    "title": "44. Backpressure: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Work arrives\" and move to \"Inspect queue and in-flight budget\". At \"Capacity available?\", the Yes branch goes to \"Admit bounded work\" and the No branch goes to \"Wait reject or drop by contract\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      44
+    ],
+    "png": "topic-044.png",
+    "svg": "topic-044.svg",
+    "mermaid": "topic-044.mmd",
+    "number": 44
+  },
+  {
+    "id": "topic-045",
+    "title": "45. Autoscaling: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Observe demand and saturation\" and move to \"Compute target capacity\". At \"Change exceeds policy thresholds?\", the Yes branch goes to \"Add or remove bounded replicas\" and the No branch goes to \"Keep current capacity\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      45
+    ],
+    "png": "topic-045.png",
+    "svg": "topic-045.svg",
+    "mermaid": "topic-045.mmd",
+    "number": 45
+  },
+  {
+    "id": "topic-046",
+    "title": "46. Horizontal Scaling: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Demand exceeds current capacity\" and move to \"Locate parallelizable work\". At \"Shared bottleneck has headroom?\", the Yes branch goes to \"Add interchangeable replicas\" and the No branch goes to \"Improve or partition bottleneck\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      46
+    ],
+    "png": "topic-046.png",
+    "svg": "topic-046.svg",
+    "mermaid": "topic-046.mmd",
+    "number": 46
+  },
+  {
+    "id": "topic-047",
+    "title": "47. Vertical Scaling: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Capacity limit observed\" and move to \"Profile limiting resource\". At \"Larger host addresses bottleneck?\", the Yes branch goes to \"Resize through controlled change\" and the No branch goes to \"Optimize workload instead\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      47
+    ],
+    "png": "topic-047.png",
+    "svg": "topic-047.svg",
+    "mermaid": "topic-047.mmd",
+    "number": 47
+  },
+  {
+    "id": "topic-048",
+    "title": "48. CDN: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"User requests content\" and move to \"Route to nearby eligible edge\". At \"Fresh permitted cached object?\", the Yes branch goes to \"Serve edge object\" and the No branch goes to \"Fetch protected origin\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      48
+    ],
+    "png": "topic-048.png",
+    "svg": "topic-048.svg",
+    "mermaid": "topic-048.mmd",
+    "number": 48
+  },
+  {
+    "id": "topic-049",
+    "title": "49. Edge Caching: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request reaches edge\" and move to \"Evaluate privacy and key\". At \"Response safely reusable?\", the Yes branch goes to \"Serve or revalidate cache\" and the No branch goes to \"Bypass shared cache\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      49
+    ],
+    "png": "topic-049.png",
+    "svg": "topic-049.svg",
+    "mermaid": "topic-049.mmd",
+    "number": 49
+  },
+  {
+    "id": "topic-050",
+    "title": "50. Cache Invalidation: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Source update commits\" and move to \"Publish versioned invalidation\". At \"Cache entry older than source?\", the Yes branch goes to \"Remove or supersede entry\" and the No branch goes to \"Keep current or newer entry\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      50
+    ],
+    "png": "topic-050.png",
+    "svg": "topic-050.svg",
+    "mermaid": "topic-050.mmd",
+    "number": 50
+  },
+  {
+    "id": "topic-051",
+    "title": "51. Feature Flags: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request arrives\" and move to \"Load validated flag configuration\". At \"Subject matches enabled cohort?\", the Yes branch goes to \"Execute new path\" and the No branch goes to \"Execute established path\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      51
+    ],
+    "png": "topic-051.png",
+    "svg": "topic-051.svg",
+    "mermaid": "topic-051.mmd",
+    "number": 51
+  },
+  {
+    "id": "topic-052",
+    "title": "52. Blue-Green Deployment: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Prepare green environment\" and move to \"Verify artifact and compatibility\". At \"Green passes checks?\", the Yes branch goes to \"Switch traffic and drain blue\" and the No branch goes to \"Keep blue serving\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      52
+    ],
+    "png": "topic-052.png",
+    "svg": "topic-052.svg",
+    "mermaid": "topic-052.mmd",
+    "number": 52
+  },
+  {
+    "id": "topic-053",
+    "title": "53. Canary Releases: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Candidate ready\" and move to \"Route stable small cohort\". At \"Guardrails pass with enough evidence?\", the Yes branch goes to \"Increase exposure\" and the No branch goes to \"Stop and revert traffic\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      53
+    ],
+    "png": "topic-053.png",
+    "svg": "topic-053.svg",
+    "mermaid": "topic-053.mmd",
+    "number": 53
+  },
+  {
+    "id": "topic-054",
+    "title": "54. Rolling Deployments: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"New revision declared\" and move to \"Start surge within limits\". At \"New instance ready?\", the Yes branch goes to \"Route traffic and drain old\" and the No branch goes to \"Pause progress and diagnose\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      54
+    ],
+    "png": "topic-054.png",
+    "svg": "topic-054.svg",
+    "mermaid": "topic-054.mmd",
+    "number": 54
+  },
+  {
+    "id": "topic-055",
+    "title": "55. Rollbacks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Regression detected\" and move to \"Identify change and data effects\". At \"Previous version compatible?\", the Yes branch goes to \"Restore known-good release\" and the No branch goes to \"Apply controlled forward repair\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      55
+    ],
+    "png": "topic-055.png",
+    "svg": "topic-055.svg",
+    "mermaid": "topic-055.mmd",
+    "number": 55
+  },
+  {
+    "id": "topic-056",
+    "title": "56. Health Checks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Health observation due\" and move to \"Evaluate scoped capability\". At \"Check succeeds within deadline?\", the Yes branch goes to \"Keep eligible status\" and the No branch goes to \"Apply matching routing or alert action\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      56
+    ],
+    "png": "topic-056.png",
+    "svg": "topic-056.svg",
+    "mermaid": "topic-056.mmd",
+    "number": 56
+  },
+  {
+    "id": "topic-057",
+    "title": "57. Liveness and Readiness Probes: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Container starts\" and move to \"Run startup probe\". At \"Startup completed?\", the Yes branch goes to \"Enable liveness and readiness\" and the No branch goes to \"Retry then restart on failure policy\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      57
+    ],
+    "png": "topic-057.png",
+    "svg": "topic-057.svg",
+    "mermaid": "topic-057.mmd",
+    "number": 57
+  },
+  {
+    "id": "topic-058",
+    "title": "58. Monitoring: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Service emits measurements\" and move to \"Collect with bounded labels\". At \"Data fresh and valid?\", the Yes branch goes to \"Evaluate user and resource trends\" and the No branch goes to \"Investigate telemetry gap\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      58
+    ],
+    "png": "topic-058.png",
+    "svg": "topic-058.svg",
+    "mermaid": "topic-058.mmd",
+    "number": 58
+  },
+  {
+    "id": "topic-059",
+    "title": "59. Logging: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Event occurs\" and move to \"Build structured safe context\". At \"Sensitive fields removed?\", the Yes branch goes to \"Emit bounded log record\" and the No branch goes to \"Redact or reject unsafe fields\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      59
+    ],
+    "png": "topic-059.png",
+    "svg": "topic-059.svg",
+    "mermaid": "topic-059.mmd",
+    "number": 59
+  },
+  {
+    "id": "topic-060",
+    "title": "60. Distributed Tracing: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Request enters service\" and move to \"Start span and propagate context\". At \"Downstream context preserved?\", the Yes branch goes to \"Link child work\" and the No branch goes to \"Record broken correlation evidence\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      60
+    ],
+    "png": "topic-060.png",
+    "svg": "topic-060.svg",
+    "mermaid": "topic-060.mmd",
+    "number": 60
+  },
+  {
+    "id": "topic-061",
+    "title": "61. Metrics: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Observe event or value\" and move to \"Select counter gauge or histogram\". At \"Labels bounded and units clear?\", the Yes branch goes to \"Record measurement\" and the No branch goes to \"Correct schema before export\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      61
+    ],
+    "png": "topic-061.png",
+    "svg": "topic-061.svg",
+    "mermaid": "topic-061.mmd",
+    "number": 61
+  },
+  {
+    "id": "topic-062",
+    "title": "62. Alerts: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Evaluate indicator window\" and move to \"Check threshold and evidence\". At \"Urgent actionable impact?\", the Yes branch goes to \"Page accountable responder\" and the No branch goes to \"Create ticket or observe\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      62
+    ],
+    "png": "topic-062.png",
+    "svg": "topic-062.svg",
+    "mermaid": "topic-062.mmd",
+    "number": 62
+  },
+  {
+    "id": "topic-063",
+    "title": "63. SLOs: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Define user journey\" and move to \"Specify SLI and window\". At \"Target justified by user need?\", the Yes branch goes to \"Adopt objective and budget policy\" and the No branch goes to \"Revise measurement or target\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      63
+    ],
+    "png": "topic-063.png",
+    "svg": "topic-063.svg",
+    "mermaid": "topic-063.mmd",
+    "number": 63
+  },
+  {
+    "id": "topic-064",
+    "title": "64. SLIs: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Observe user operation\" and move to \"Classify eligible and good events\". At \"Measurement complete and unbiased?\", the Yes branch goes to \"Aggregate indicator\" and the No branch goes to \"Repair telemetry or qualify uncertainty\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      64
+    ],
+    "png": "topic-064.png",
+    "svg": "topic-064.svg",
+    "mermaid": "topic-064.mmd",
+    "number": 64
+  },
+  {
+    "id": "topic-065",
+    "title": "65. Error Budgets: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Measure bad-event fraction\" and move to \"Calculate remaining budget and burn\". At \"Policy threshold crossed?\", the Yes branch goes to \"Change release and reliability priorities\" and the No branch goes to \"Continue measured delivery\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      65
+    ],
+    "png": "topic-065.png",
+    "svg": "topic-065.svg",
+    "mermaid": "topic-065.mmd",
+    "number": 65
+  },
+  {
+    "id": "topic-066",
+    "title": "66. Observability: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"User symptom appears\" and move to \"Correlate metrics logs and traces\". At \"Evidence distinguishes hypothesis?\", the Yes branch goes to \"Run safe targeted test\" and the No branch goes to \"Add missing bounded instrumentation\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      66
+    ],
+    "png": "topic-066.png",
+    "svg": "topic-066.svg",
+    "mermaid": "topic-066.mmd",
+    "number": 66
+  },
+  {
+    "id": "topic-067",
+    "title": "67. Secrets Management: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Workload needs credential\" and move to \"Authenticate workload identity\". At \"Policy permits secret access?\", the Yes branch goes to \"Retrieve short-lived value\" and the No branch goes to \"Deny and audit\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      67
+    ],
+    "png": "topic-067.png",
+    "svg": "topic-067.svg",
+    "mermaid": "topic-067.mmd",
+    "number": 67
+  },
+  {
+    "id": "topic-068",
+    "title": "68. IAM: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Protected operation requested\" and move to \"Authenticate principal\". At \"Policy and ownership allow action?\", the Yes branch goes to \"Execute scoped operation\" and the No branch goes to \"Deny with safe response\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      68
+    ],
+    "png": "topic-068.png",
+    "svg": "topic-068.svg",
+    "mermaid": "topic-068.mmd",
+    "number": 68
+  },
+  {
+    "id": "topic-069",
+    "title": "69. OAuth: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client starts authorization\" and move to \"Send challenge and bound request\". At \"User authorizes requested access?\", the Yes branch goes to \"Return short-lived code\" and the No branch goes to \"Return controlled denial\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      69
+    ],
+    "png": "topic-069.png",
+    "svg": "topic-069.svg",
+    "mermaid": "topic-069.mmd",
+    "number": 69
+  },
+  {
+    "id": "topic-070",
+    "title": "70. JWT Rotation: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Token received\" and move to \"Select trusted issuer key\". At \"Signature and claims valid?\", the Yes branch goes to \"Authorize scoped action\" and the No branch goes to \"Reject and possibly refresh safely\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      70
+    ],
+    "png": "topic-070.png",
+    "svg": "topic-070.svg",
+    "mermaid": "topic-070.mmd",
+    "number": 70
+  },
+  {
+    "id": "topic-071",
+    "title": "71. TLS: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client initiates secure connection\" and move to \"Negotiate and validate certificate\". At \"Identity and handshake valid?\", the Yes branch goes to \"Derive keys and protect records\" and the No branch goes to \"Abort without application secrets\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      71
+    ],
+    "png": "topic-071.png",
+    "svg": "topic-071.svg",
+    "mermaid": "topic-071.mmd",
+    "number": 71
+  },
+  {
+    "id": "topic-072",
+    "title": "72. Encryption at Rest: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Data ready for storage\" and move to \"Obtain authorized encryption context\". At \"Key access permitted?\", the Yes branch goes to \"Encrypt with integrity protection\" and the No branch goes to \"Deny and audit\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      72
+    ],
+    "png": "topic-072.png",
+    "svg": "topic-072.svg",
+    "mermaid": "topic-072.mmd",
+    "number": 72
+  },
+  {
+    "id": "topic-073",
+    "title": "73. Encryption in Transit: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Component sends data\" and move to \"Choose authenticated transport\". At \"Peer identity verified?\", the Yes branch goes to \"Transmit encrypted records\" and the No branch goes to \"Abort insecure connection\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      73
+    ],
+    "png": "topic-073.png",
+    "svg": "topic-073.svg",
+    "mermaid": "topic-073.mmd",
+    "number": 73
+  },
+  {
+    "id": "topic-074",
+    "title": "74. WAF: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"HTTP request reaches boundary\" and move to \"Normalize and inspect policy\". At \"Request allowed by rules?\", the Yes branch goes to \"Forward to application controls\" and the No branch goes to \"Block or challenge and record\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      74
+    ],
+    "png": "topic-074.png",
+    "svg": "topic-074.svg",
+    "mermaid": "topic-074.mmd",
+    "number": 74
+  },
+  {
+    "id": "topic-075",
+    "title": "75. DDoS Protection: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Traffic surge detected\" and move to \"Identify exhausted resource and source pattern\". At \"Useful demand can be admitted safely?\", the Yes branch goes to \"Prioritize and serve bounded traffic\" and the No branch goes to \"Filter upstream or shed at boundary\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      75
+    ],
+    "png": "topic-075.png",
+    "svg": "topic-075.svg",
+    "mermaid": "topic-075.mmd",
+    "number": 75
+  },
+  {
+    "id": "topic-076",
+    "title": "76. CORS: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Browser cross-origin request\" and move to \"Evaluate origin and optional preflight\". At \"Explicit browser-read policy permits?\", the Yes branch goes to \"Return matching CORS headers\" and the No branch goes to \"Omit permission or reject preflight\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      76
+    ],
+    "png": "topic-076.png",
+    "svg": "topic-076.svg",
+    "mermaid": "topic-076.mmd",
+    "number": 76
+  },
+  {
+    "id": "topic-077",
+    "title": "77. CSRF: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Cookie-authenticated mutation\" and move to \"Validate method origin and token\". At \"Request bound to legitimate session flow?\", the Yes branch goes to \"Check authorization and mutate\" and the No branch goes to \"Reject and record safe metadata\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      77
+    ],
+    "png": "topic-077.png",
+    "svg": "topic-077.svg",
+    "mermaid": "topic-077.mmd",
+    "number": 77
+  },
+  {
+    "id": "topic-078",
+    "title": "78. SQL Injection: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Untrusted query input\" and move to \"Bind values and restrict DB role\". At \"Identifiers from allowlist?\", the Yes branch goes to \"Execute parameterized statement\" and the No branch goes to \"Reject unsupported query shape\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      78
+    ],
+    "png": "topic-078.png",
+    "svg": "topic-078.svg",
+    "mermaid": "topic-078.mmd",
+    "number": 78
+  },
+  {
+    "id": "topic-079",
+    "title": "79. XSS: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Untrusted content displayed\" and move to \"Identify output context and policy\". At \"Safe encoding or sanitizer applied?\", the Yes branch goes to \"Render inert or approved content\" and the No branch goes to \"Reject unsafe rendering path\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      79
+    ],
+    "png": "topic-079.png",
+    "svg": "topic-079.svg",
+    "mermaid": "topic-079.mmd",
+    "number": 79
+  },
+  {
+    "id": "topic-080",
+    "title": "80. SSRF: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Server asked to fetch URL\" and move to \"Validate allowed scheme host and port\". At \"Destination and actual route permitted?\", the Yes branch goes to \"Fetch with bounded resources\" and the No branch goes to \"Deny and audit target metadata\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      80
+    ],
+    "png": "topic-080.png",
+    "svg": "topic-080.svg",
+    "mermaid": "topic-080.mmd",
+    "number": 80
+  },
+  {
+    "id": "topic-081",
+    "title": "81. Database Migrations: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Schema change proposed\" and move to \"Check old and new compatibility\". At \"Safe expansion possible?\", the Yes branch goes to \"Apply additive change and backfill\" and the No branch goes to \"Redesign destructive transition\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      81
+    ],
+    "png": "topic-081.png",
+    "svg": "topic-081.svg",
+    "mermaid": "topic-081.mmd",
+    "number": 81
+  },
+  {
+    "id": "topic-082",
+    "title": "82. Schema Versioning: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Producer proposes schema change\" and move to \"Check syntax and semantic compatibility\". At \"Supported readers handle change?\", the Yes branch goes to \"Publish versioned contract\" and the No branch goes to \"Introduce adapter or new version\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      82
+    ],
+    "png": "topic-082.png",
+    "svg": "topic-082.svg",
+    "mermaid": "topic-082.mmd",
+    "number": 82
+  },
+  {
+    "id": "topic-083",
+    "title": "83. Disaster Recovery: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Major outage declared\" and move to \"Assess scope and recovery point\". At \"Trusted recovery path available?\", the Yes branch goes to \"Restore or activate standby\" and the No branch goes to \"Escalate and preserve evidence\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      83
+    ],
+    "png": "topic-083.png",
+    "svg": "topic-083.svg",
+    "mermaid": "topic-083.mmd",
+    "number": 83
+  },
+  {
+    "id": "topic-084",
+    "title": "84. Backups: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Backup schedule triggers\" and move to \"Capture consistent data and logs\". At \"Copy verified and protected?\", the Yes branch goes to \"Retain across failure domains\" and the No branch goes to \"Retry and alert backup gap\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      84
+    ],
+    "png": "topic-084.png",
+    "svg": "topic-084.svg",
+    "mermaid": "topic-084.mmd",
+    "number": 84
+  },
+  {
+    "id": "topic-085",
+    "title": "85. Failover: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Suspected primary failure\" and move to \"Validate authority and candidate freshness\". At \"Safe promotion conditions met?\", the Yes branch goes to \"Fence old owner and promote\" and the No branch goes to \"Remain unavailable or escalate\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      85
+    ],
+    "png": "topic-085.png",
+    "svg": "topic-085.svg",
+    "mermaid": "topic-085.mmd",
+    "number": 85
+  },
+  {
+    "id": "topic-086",
+    "title": "86. Multi-Region Deployment: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"User request routed by region\" and move to \"Determine data owner and policy\". At \"Local or safe remote authority available?\", the Yes branch goes to \"Serve under defined consistency\" and the No branch goes to \"Degrade or initiate fenced failover\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      86
+    ],
+    "png": "topic-086.png",
+    "svg": "topic-086.svg",
+    "mermaid": "topic-086.mmd",
+    "number": 86
+  },
+  {
+    "id": "topic-087",
+    "title": "87. Chaos Engineering: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Reliability hypothesis defined\" and move to \"Set blast radius and abort controls\". At \"Baseline observable and experiment authorized?\", the Yes branch goes to \"Inject bounded fault\" and the No branch goes to \"Stop preparation and repair prerequisites\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      87
+    ],
+    "png": "topic-087.png",
+    "svg": "topic-087.svg",
+    "mermaid": "topic-087.mmd",
+    "number": 87
+  },
+  {
+    "id": "topic-088",
+    "title": "88. Cost Optimization: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Cost trend observed\" and move to \"Attribute spend to useful work\". At \"Optimization preserves required outcomes?\", the Yes branch goes to \"Run measured experiment\" and the No branch goes to \"Reject unsafe saving\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      88
+    ],
+    "png": "topic-088.png",
+    "svg": "topic-088.svg",
+    "mermaid": "topic-088.mmd",
+    "number": 88
+  },
+  {
+    "id": "topic-089",
+    "title": "89. Cold Starts: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"New instance allocated\" and move to \"Load runtime artifacts and model\". At \"Initialization verified?\", the Yes branch goes to \"Mark ready and warm paths\" and the No branch goes to \"Retry boundedly or fail startup\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      89
+    ],
+    "png": "topic-089.png",
+    "svg": "topic-089.svg",
+    "mermaid": "topic-089.mmd",
+    "number": 89
+  },
+  {
+    "id": "topic-090",
+    "title": "90. Serverless Limits: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Invocation arrives\" and move to \"Check quotas and execution budget\". At \"Work fits synchronous limits?\", the Yes branch goes to \"Execute bounded idempotent task\" and the No branch goes to \"Reject or enqueue durable job\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      90
+    ],
+    "png": "topic-090.png",
+    "svg": "topic-090.svg",
+    "mermaid": "topic-090.mmd",
+    "number": 90
+  },
+  {
+    "id": "topic-091",
+    "title": "91. Latency: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Operation starts\" and move to \"Measure each phase with clear boundary\". At \"Dominant delay identified?\", the Yes branch goes to \"Optimize critical measured phase\" and the No branch goes to \"Add timing or profile evidence\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      91
+    ],
+    "png": "topic-091.png",
+    "svg": "topic-091.svg",
+    "mermaid": "topic-091.mmd",
+    "number": 91
+  },
+  {
+    "id": "topic-092",
+    "title": "92. Throughput: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Workload submitted\" and move to \"Count useful completed units\". At \"Completion keeps pace with arrivals?\", the Yes branch goes to \"Measure sustainable headroom\" and the No branch goes to \"Locate bottleneck and bound backlog\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      92
+    ],
+    "png": "topic-092.png",
+    "svg": "topic-092.svg",
+    "mermaid": "topic-092.mmd",
+    "number": 92
+  },
+  {
+    "id": "topic-093",
+    "title": "93. P99 Latency: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Collect latency population\" and move to \"Validate sample size and boundaries\". At \"Distribution data aggregatable?\", the Yes branch goes to \"Compute percentile from combined samples\" and the No branch goes to \"Avoid averaging local percentiles\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      93
+    ],
+    "png": "topic-093.png",
+    "svg": "topic-093.svg",
+    "mermaid": "topic-093.mmd",
+    "number": 93
+  },
+  {
+    "id": "topic-094",
+    "title": "94. Tail Latency: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Slow-tail regression observed\" and move to \"Trace critical path and workload mix\". At \"Cause identified with evidence?\", the Yes branch goes to \"Reduce variance or required fanout\" and the No branch goes to \"Gather phase and saturation data\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      94
+    ],
+    "png": "topic-094.png",
+    "svg": "topic-094.svg",
+    "mermaid": "topic-094.mmd",
+    "number": 94
+  },
+  {
+    "id": "topic-095",
+    "title": "95. Network Partitions: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Communication fails\" and move to \"Determine affected paths and authority\". At \"Operation safe with available quorum?\", the Yes branch goes to \"Continue permitted work\" and the No branch goes to \"Reject or defer unsafe operation\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      95
+    ],
+    "png": "topic-095.png",
+    "svg": "topic-095.svg",
+    "mermaid": "topic-095.mmd",
+    "number": 95
+  },
+  {
+    "id": "topic-096",
+    "title": "96. Clock Skew: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Time-dependent decision\" and move to \"Choose wall monotonic or logical clock\". At \"Required assumption satisfied?\", the Yes branch goes to \"Apply bounded time or ordering rule\" and the No branch goes to \"Use stronger authority or fail safely\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      96
+    ],
+    "png": "topic-096.png",
+    "svg": "topic-096.svg",
+    "mermaid": "topic-096.mmd",
+    "number": 96
+  },
+  {
+    "id": "topic-097",
+    "title": "97. DNS: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Application needs address\" and move to \"Check local and resolver caches\". At \"Valid cached answer exists?\", the Yes branch goes to \"Return cached records\" and the No branch goes to \"Follow delegation to authority\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      97
+    ],
+    "png": "topic-097.png",
+    "svg": "topic-097.svg",
+    "mermaid": "topic-097.mmd",
+    "number": 97
+  },
+  {
+    "id": "topic-098",
+    "title": "98. TCP vs UDP: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Application sends data\" and move to \"Choose required transport semantics\". At \"Reliable ordered bytes required?\", the Yes branch goes to \"Use TCP with explicit message framing\" and the No branch goes to \"Use datagrams with application policy\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      98
+    ],
+    "png": "topic-098.png",
+    "svg": "topic-098.svg",
+    "mermaid": "topic-098.mmd",
+    "number": 98
+  },
+  {
+    "id": "topic-099",
+    "title": "99. HTTP/2 and HTTP/3: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client requests HTTP connection\" and move to \"Negotiate supported protocol\". At \"HTTP3 path available and permitted?\", the Yes branch goes to \"Use QUIC streams over UDP\" and the No branch goes to \"Use supported HTTP over TCP\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      99
+    ],
+    "png": "topic-099.png",
+    "svg": "topic-099.svg",
+    "mermaid": "topic-099.mmd",
+    "number": 99
+  },
+  {
+    "id": "topic-100",
+    "title": "100. gRPC: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Client invokes generated method\" and move to \"Attach deadline identity and metadata\". At \"Contract and authorization valid?\", the Yes branch goes to \"Execute bounded RPC handler\" and the No branch goes to \"Return structured status\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      100
+    ],
+    "png": "topic-100.png",
+    "svg": "topic-100.svg",
+    "mermaid": "topic-100.mmd",
+    "number": 100
+  },
+  {
+    "id": "topic-101",
+    "title": "101. Webhooks: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Callback received\" and move to \"Verify raw-body signature and freshness\". At \"Authentic allowed event?\", the Yes branch goes to \"Durably record event ID\" and the No branch goes to \"Reject invalid callback\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      101
+    ],
+    "png": "topic-101.png",
+    "svg": "topic-101.svg",
+    "mermaid": "topic-101.mmd",
+    "number": 101
+  },
+  {
+    "id": "topic-102",
+    "title": "102. API Versioning: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Contract change proposed\" and move to \"Assess supported client behavior\". At \"Backward compatible under contract?\", the Yes branch goes to \"Evolve existing version\" and the No branch goes to \"Introduce explicit new version\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      102
+    ],
+    "png": "topic-102.png",
+    "svg": "topic-102.svg",
+    "mermaid": "topic-102.mmd",
+    "number": 102
+  },
+  {
+    "id": "topic-103",
+    "title": "103. Semantic Versioning: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Change ready for release\" and move to \"Identify public contract impact\". At \"Incompatible supported behavior?\", the Yes branch goes to \"Increment major\" and the No branch goes to \"Choose minor or patch by change\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      103
+    ],
+    "png": "topic-103.png",
+    "svg": "topic-103.svg",
+    "mermaid": "topic-103.mmd",
+    "number": 103
+  },
+  {
+    "id": "topic-104",
+    "title": "104. Infrastructure as Code: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Infrastructure change committed\" and move to \"Validate and preview desired diff\". At \"Change reviewed and scoped correctly?\", the Yes branch goes to \"Apply through controlled identity\" and the No branch goes to \"Revise unsafe or unexpected plan\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      104
+    ],
+    "png": "topic-104.png",
+    "svg": "topic-104.svg",
+    "mermaid": "topic-104.mmd",
+    "number": 104
+  },
+  {
+    "id": "topic-105",
+    "title": "105. Terraform: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Configuration prepared\" and move to \"Initialize and compare state with provider\". At \"Plan matches intended scoped change?\", the Yes branch goes to \"Apply reviewed plan\" and the No branch goes to \"Stop and inspect drift or replacement\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      105
+    ],
+    "png": "topic-105.png",
+    "svg": "topic-105.svg",
+    "mermaid": "topic-105.mmd",
+    "number": 105
+  },
+  {
+    "id": "topic-106",
+    "title": "106. Helm Charts: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Chart and values selected\" and move to \"Render templates and inspect objects\". At \"Lint and target validation pass?\", the Yes branch goes to \"Install or upgrade release\" and the No branch goes to \"Correct values or templates\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      106
+    ],
+    "png": "topic-106.png",
+    "svg": "topic-106.svg",
+    "mermaid": "topic-106.mmd",
+    "number": 106
+  },
+  {
+    "id": "topic-107",
+    "title": "107. Build Caching: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Build step requested\" and move to \"Hash complete declared inputs\". At \"Trusted matching cache entry exists?\", the Yes branch goes to \"Reuse validated output\" and the No branch goes to \"Execute step and record output\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      107
+    ],
+    "png": "topic-107.png",
+    "svg": "topic-107.svg",
+    "mermaid": "topic-107.mmd",
+    "number": 107
+  },
+  {
+    "id": "topic-108",
+    "title": "108. Dependency Hell: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Dependency change proposed\" and move to \"Resolve graph in isolated environment\". At \"Versions and platform compatible?\", the Yes branch goes to \"Lock and test full artifact\" and the No branch goes to \"Adjust constraints or isolate workload\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      108
+    ],
+    "png": "topic-108.png",
+    "svg": "topic-108.svg",
+    "mermaid": "topic-108.mmd",
+    "number": 108
+  },
+  {
+    "id": "topic-109",
+    "title": "109. Production Incidents: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Impact detected\" and move to \"Declare severity and assign roles\". At \"Immediate safe mitigation available?\", the Yes branch goes to \"Apply one controlled mitigation\" and the No branch goes to \"Escalate and test hypotheses\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      109
+    ],
+    "png": "topic-109.png",
+    "svg": "topic-109.svg",
+    "mermaid": "topic-109.mmd",
+    "number": 109
+  },
+  {
+    "id": "topic-110",
+    "title": "110. On-Call: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Shift begins\" and move to \"Verify access risks and handoff\". At \"Actionable page received?\", the Yes branch goes to \"Acknowledge triage and escalate\" and the No branch goes to \"Continue routine observation\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      110
+    ],
+    "png": "topic-110.png",
+    "svg": "topic-110.svg",
+    "mermaid": "topic-110.mmd",
+    "number": 110
+  },
+  {
+    "id": "topic-111",
+    "title": "111. Postmortems: decision and recovery flow",
+    "kind": "flowchart",
+    "caption": "Start at \"Service stabilized\" and move to \"Collect evidence and timeline\". At \"Mechanism supported by evidence?\", the Yes branch goes to \"Explain contributing conditions\" and the No branch goes to \"Record uncertainty and investigate\". Follow the arrows to the terminal or recovery outcome; a dashed branch is not an implicit success.",
+    "topics": [
+      111
+    ],
+    "png": "topic-111.png",
+    "svg": "topic-111.svg",
+    "mermaid": "topic-111.mmd",
+    "number": 111
+  },
+  {
+    "id": "arch-client",
+    "title": "Client-server and trust boundaries",
+    "kind": "architecture",
+    "caption": "The browser reaches the proxy; the application performs authorized data access. Each hop has its own deadline and identity boundary.",
+    "topics": [
+      4,
+      71
+    ],
+    "png": "arch-client.png",
+    "svg": "arch-client.svg",
+    "mermaid": "arch-client.mmd",
+    "number": 112
+  },
+  {
+    "id": "arch-monolith",
+    "title": "ShopStream: modular monolith",
+    "kind": "architecture",
+    "caption": "Modules share deployment and a local database transaction boundary. Payment is still a remote, independently failing dependency.",
+    "topics": [
+      18,
+      46
+    ],
+    "png": "arch-monolith.png",
+    "svg": "arch-monolith.svg",
+    "mermaid": "arch-monolith.mmd",
+    "number": 113
+  },
+  {
+    "id": "arch-microservices",
+    "title": "ShopStream: explicit service boundaries",
+    "kind": "architecture",
+    "caption": "Separate services own data and communicate through contracts. This adds independent scaling and independent failure states.",
+    "topics": [
+      17,
+      19
+    ],
+    "png": "arch-microservices.png",
+    "svg": "arch-microservices.svg",
+    "mermaid": "arch-microservices.mmd",
+    "number": 114
+  },
+  {
+    "id": "arch-proxy-lb",
+    "title": "Reverse proxy and backend selection",
+    "kind": "architecture",
+    "caption": "The proxy selects a ready backend. Shared state and database capacity remain dependencies of both replicas.",
+    "topics": [
+      3,
+      4
+    ],
+    "png": "arch-proxy-lb.png",
+    "svg": "arch-proxy-lb.svg",
+    "mermaid": "arch-proxy-lb.mmd",
+    "number": 115
+  },
+  {
+    "id": "arch-gateway",
+    "title": "Gateway policy and object authorization",
+    "kind": "architecture",
+    "caption": "Gateway authentication and quota precede service-level ownership checks. A gateway pass is not blanket authorization.",
+    "topics": [
+      5,
+      68
+    ],
+    "png": "arch-gateway.png",
+    "svg": "arch-gateway.svg",
+    "mermaid": "arch-gateway.mmd",
+    "number": 116
+  },
+  {
+    "id": "arch-cache",
+    "title": "Local and shared cache placement",
+    "kind": "architecture",
+    "caption": "Local and shared caches reduce different costs. The source transaction and invalidation path determine freshness.",
+    "topics": [
+      2,
+      50
+    ],
+    "png": "arch-cache.png",
+    "svg": "arch-cache.svg",
+    "mermaid": "arch-cache.mmd",
+    "number": 117
+  },
+  {
+    "id": "arch-queue",
+    "title": "Durable queue and failure isolation",
+    "kind": "architecture",
+    "caption": "Acknowledge only after the promised durable effect. Retry and DLQ paths remain visible instead of being counted as completion.",
+    "topics": [
+      15,
+      20
+    ],
+    "png": "arch-queue.png",
+    "svg": "arch-queue.svg",
+    "mermaid": "arch-queue.mmd",
+    "number": 118
+  },
+  {
+    "id": "arch-pubsub",
+    "title": "Independent subscription progress",
+    "kind": "architecture",
+    "caption": "Each subscription has its own progress and failure handling. Consumers in one subscription can share work rather than each receiving every event.",
+    "topics": [
+      16
+    ],
+    "png": "arch-pubsub.png",
+    "svg": "arch-pubsub.svg",
+    "mermaid": "arch-pubsub.mmd",
+    "number": 119
+  },
+  {
+    "id": "arch-sync-async",
+    "title": "Synchronous response and asynchronous completion",
+    "kind": "architecture",
+    "caption": "Durable acceptance is an earlier milestone than business completion. A status API exposes the distinction.",
+    "topics": [
+      17,
+      90
+    ],
+    "png": "arch-sync-async.png",
+    "svg": "arch-sync-async.svg",
+    "mermaid": "arch-sync-async.mmd",
+    "number": 120
+  },
+  {
+    "id": "arch-saga",
+    "title": "Saga ownership and compensation",
+    "kind": "architecture",
+    "caption": "The orchestrator persists progress and handles unknown outcomes. Compensation is a retryable business action, not time reversal.",
+    "topics": [
+      18,
+      19
+    ],
+    "png": "arch-saga.png",
+    "svg": "arch-saga.svg",
+    "mermaid": "arch-saga.mmd",
+    "number": 121
+  },
+  {
+    "id": "arch-replication",
+    "title": "Primary and asynchronously applied replicas",
+    "kind": "architecture",
+    "caption": "Replica reads are selected by freshness requirements. Log transport and application can lag independently.",
+    "topics": [
+      29,
+      32
+    ],
+    "png": "arch-replication.png",
+    "svg": "arch-replication.svg",
+    "mermaid": "arch-replication.mmd",
+    "number": 122
+  },
+  {
+    "id": "arch-sharding",
+    "title": "Shard routing and hot ownership",
+    "kind": "architecture",
+    "caption": "The directory maps a key to an owner. Rebalancing must fence old ownership before stale routers can write divergent data.",
+    "topics": [
+      30,
+      31
+    ],
+    "png": "arch-sharding.png",
+    "svg": "arch-sharding.svg",
+    "mermaid": "arch-sharding.mmd",
+    "number": 123
+  },
+  {
+    "id": "arch-docker",
+    "title": "Container image and host boundary",
+    "kind": "architecture",
+    "caption": "The container shares the host kernel. Durable storage and network configuration are outside its disposable writable layer.",
+    "topics": [
+      7
+    ],
+    "png": "arch-docker.png",
+    "svg": "arch-docker.svg",
+    "mermaid": "arch-docker.mmd",
+    "number": 124
+  },
+  {
+    "id": "arch-kubernetes",
+    "title": "Kubernetes control and serving paths",
+    "kind": "architecture",
+    "caption": "Controllers reconcile desired state; kubelets run workloads. Service eligibility depends on readiness and endpoint updates.",
+    "topics": [
+      8,
+      9,
+      57
+    ],
+    "png": "arch-kubernetes.png",
+    "svg": "arch-kubernetes.svg",
+    "mermaid": "arch-kubernetes.mmd",
+    "number": 125
+  },
+  {
+    "id": "arch-cicd",
+    "title": "Immutable artifact promotion",
+    "kind": "architecture",
+    "caption": "One artifact digest moves through environments. Configuration and migration compatibility are reviewed alongside the binary.",
+    "topics": [
+      6,
+      52,
+      53,
+      54
+    ],
+    "png": "arch-cicd.png",
+    "svg": "arch-cicd.svg",
+    "mermaid": "arch-cicd.mmd",
+    "number": 126
+  },
+  {
+    "id": "arch-observability",
+    "title": "Correlated telemetry pipeline",
+    "kind": "architecture",
+    "caption": "Metrics, logs, and traces retain different information. Shared operation and release IDs make evidence joinable.",
+    "topics": [
+      58,
+      59,
+      60,
+      66
+    ],
+    "png": "arch-observability.png",
+    "svg": "arch-observability.svg",
+    "mermaid": "arch-observability.mmd",
+    "number": 127
+  },
+  {
+    "id": "arch-auth",
+    "title": "Identity and resource authorization",
+    "kind": "architecture",
+    "caption": "Login or delegated access establishes a principal. The final service still checks action and resource ownership.",
+    "topics": [
+      68,
+      69,
+      70
+    ],
+    "png": "arch-auth.png",
+    "svg": "arch-auth.svg",
+    "mermaid": "arch-auth.mmd",
+    "number": 128
+  },
+  {
+    "id": "arch-secure-web",
+    "title": "Layered defensive application",
+    "kind": "architecture",
+    "caption": "Filtering, authentication, authorization, safe query construction, and secret handling address different threats.",
+    "topics": [
+      67,
+      74,
+      78,
+      79,
+      80
+    ],
+    "png": "arch-secure-web.png",
+    "svg": "arch-secure-web.svg",
+    "mermaid": "arch-secure-web.mmd",
+    "number": 129
+  },
+  {
+    "id": "arch-cdn",
+    "title": "CDN edge and protected origin",
+    "kind": "architecture",
+    "caption": "Nearby edges serve permitted copies. A miss converges on origin capacity, so cold-cache behavior needs its own test.",
+    "topics": [
+      48,
+      49
+    ],
+    "png": "arch-cdn.png",
+    "svg": "arch-cdn.svg",
+    "mermaid": "arch-cdn.mmd",
+    "number": 130
+  },
+  {
+    "id": "arch-regions",
+    "title": "Multi-region authority and recovery",
+    "kind": "architecture",
+    "caption": "A replica is not an independent writer until a safe authority transition occurs. Route availability and data consistency are separate decisions.",
+    "topics": [
+      83,
+      85,
+      86
+    ],
+    "png": "arch-regions.png",
+    "svg": "arch-regions.svg",
+    "mermaid": "arch-regions.mmd",
+    "number": 131
+  },
+  {
+    "id": "arch-backup",
+    "title": "Backup, key access, and isolated restore",
+    "kind": "architecture",
+    "caption": "Recovery needs both data and keys. Validation in isolation is evidence that the archived copy is actually usable.",
+    "topics": [
+      72,
+      83,
+      84
+    ],
+    "png": "arch-backup.png",
+    "svg": "arch-backup.svg",
+    "mermaid": "arch-backup.mmd",
+    "number": 132
+  },
+  {
+    "id": "arch-iac",
+    "title": "Infrastructure plan and controlled apply",
+    "kind": "architecture",
+    "caption": "Configuration, state, proposed changes, and live resources are distinct. Access to state and apply credentials is restricted.",
+    "topics": [
+      104,
+      105
+    ],
+    "png": "arch-iac.png",
+    "svg": "arch-iac.svg",
+    "mermaid": "arch-iac.mmd",
+    "number": 133
+  },
+  {
+    "id": "arch-feature-store",
+    "title": "Offline and online feature consistency",
+    "kind": "architecture",
+    "caption": "Training and inference share a transformation contract but have different time and access requirements. Monitor materialization lag.",
+    "topics": [
+      2,
+      35,
+      50,
+      82
+    ],
+    "png": "arch-feature-store.png",
+    "svg": "arch-feature-store.svg",
+    "mermaid": "arch-feature-store.mmd",
+    "number": 134
+  },
+  {
+    "id": "arch-ai-quality",
+    "title": "Serving reliability and model quality",
+    "kind": "architecture",
+    "caption": "Operational success and useful predictions are evaluated independently, then combined in a release decision.",
+    "topics": [
+      53,
+      63,
+      66
+    ],
+    "png": "arch-ai-quality.png",
+    "svg": "arch-ai-quality.svg",
+    "mermaid": "arch-ai-quality.mmd",
+    "number": 135
+  },
+  {
+    "id": "arch-production",
+    "title": "ShopStream production reference architecture",
+    "kind": "architecture",
+    "caption": "Requests, durable state, asynchronous work, telemetry, and recovery are separate paths. Shared dependencies remain explicit.",
+    "topics": [
+      1,
+      2,
+      3,
+      14,
+      17,
+      67,
+      83
+    ],
+    "png": "arch-production.png",
+    "svg": "arch-production.svg",
+    "mermaid": "arch-production.mmd",
+    "number": 136
+  },
+  {
+    "id": "seq-http",
+    "title": "HTTP request from name lookup to response",
+    "kind": "sequence",
+    "caption": "Read top to bottom. Each arrow names a request or reply. Connection setup may be reused; a lost response does not prove a write failed.",
+    "topics": [
+      4,
+      71,
+      97
+    ],
+    "png": "seq-http.png",
+    "svg": "seq-http.svg",
+    "mermaid": "seq-http.mmd",
+    "number": 137
+  },
+  {
+    "id": "seq-cache",
+    "title": "Cache miss and bounded origin read",
+    "kind": "sequence",
+    "caption": "A miss reaches the origin; a hit would return earlier. Concurrent refresh and update races require the policies in Topic 50.",
+    "topics": [
+      2,
+      50
+    ],
+    "png": "seq-cache.png",
+    "svg": "seq-cache.svg",
+    "mermaid": "seq-cache.mmd",
+    "number": 138
+  },
+  {
+    "id": "seq-login",
+    "title": "Login and session creation",
+    "kind": "sequence",
+    "caption": "Rotate session identifiers after authentication; cookies do not replace CSRF or object-level authorization.",
+    "topics": [
+      68,
+      77
+    ],
+    "png": "seq-login.png",
+    "svg": "seq-login.svg",
+    "mermaid": "seq-login.mmd",
+    "number": 139
+  },
+  {
+    "id": "seq-oauth",
+    "title": "Authorization code with PKCE",
+    "kind": "sequence",
+    "caption": "The code is exchanged by the client. Validate redirect binding, issuer, and audience with maintained libraries.",
+    "topics": [
+      69,
+      70
+    ],
+    "png": "seq-oauth.png",
+    "svg": "seq-oauth.svg",
+    "mermaid": "seq-oauth.mmd",
+    "number": 140
+  },
+  {
+    "id": "seq-replica",
+    "title": "Read after write with replica lag",
+    "kind": "sequence",
+    "caption": "A session token or explicit primary route prevents a stale replica from falsely hiding a newly accepted order.",
+    "topics": [
+      29,
+      35
+    ],
+    "png": "seq-replica.png",
+    "svg": "seq-replica.svg",
+    "mermaid": "seq-replica.mmd",
+    "number": 141
+  },
+  {
+    "id": "seq-k8s",
+    "title": "Deployment and health gates",
+    "kind": "sequence",
+    "caption": "Startup gates other probes. Readiness controls routing eligibility; liveness has a separate restart purpose.",
+    "topics": [
+      8,
+      54,
+      57
+    ],
+    "png": "seq-k8s.png",
+    "svg": "seq-k8s.svg",
+    "mermaid": "seq-k8s.mmd",
+    "number": 142
+  },
+  {
+    "id": "seq-trace",
+    "title": "Trace context across synchronous and async work",
+    "kind": "sequence",
+    "caption": "Async work may outlive the initial request. A trace link and operation ID preserve causality without pretending it is one synchronous stack.",
+    "topics": [
+      17,
+      60
+    ],
+    "png": "seq-trace.png",
+    "svg": "seq-trace.svg",
+    "mermaid": "seq-trace.mmd",
+    "number": 143
+  },
+  {
+    "id": "seq-saga",
+    "title": "Saga failure and compensating action",
+    "kind": "sequence",
+    "caption": "Only a known payment decline takes this path. An unknown payment outcome first requires reconciliation; failed compensation remains durably pending.",
+    "topics": [
+      18,
+      19
+    ],
+    "png": "seq-saga.png",
+    "svg": "seq-saga.svg",
+    "mermaid": "seq-saga.mmd",
+    "number": 144
+  },
+  {
+    "id": "seq-webhook",
+    "title": "Webhook delivery, retry, and durable acceptance",
+    "kind": "sequence",
+    "caption": "A response can be lost after durable acceptance. Repeated delivery uses the same event identity and does not repeat the local effect.",
+    "topics": [
+      14,
+      101
+    ],
+    "png": "seq-webhook.png",
+    "svg": "seq-webhook.svg",
+    "mermaid": "seq-webhook.mmd",
+    "number": 145
+  },
+  {
+    "id": "case-url-detail",
+    "title": "URL shortener: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the url shortener case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-url-detail.png",
+    "svg": "case-url-detail.svg",
+    "mermaid": "case-url-detail.mmd",
+    "number": 146
+  },
+  {
+    "id": "case-url-overview",
+    "title": "URL shortener: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-url-overview.png",
+    "svg": "case-url-overview.svg",
+    "mermaid": "case-url-overview.mmd",
+    "number": 147
+  },
+  {
+    "id": "case-url-sequence",
+    "title": "URL shortener: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-url-sequence.png",
+    "svg": "case-url-sequence.svg",
+    "mermaid": "case-url-sequence.mmd",
+    "number": 148
+  },
+  {
+    "id": "case-api-detail",
+    "title": "Rate-limited API: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the rate-limited api case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-api-detail.png",
+    "svg": "case-api-detail.svg",
+    "mermaid": "case-api-detail.mmd",
+    "number": 149
+  },
+  {
+    "id": "case-api-overview",
+    "title": "Rate-limited API: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-api-overview.png",
+    "svg": "case-api-overview.svg",
+    "mermaid": "case-api-overview.mmd",
+    "number": 150
+  },
+  {
+    "id": "case-api-sequence",
+    "title": "Rate-limited API: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-api-sequence.png",
+    "svg": "case-api-sequence.svg",
+    "mermaid": "case-api-sequence.mmd",
+    "number": 151
+  },
+  {
+    "id": "case-orders-detail",
+    "title": "Orders and payments: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the orders and payments case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-orders-detail.png",
+    "svg": "case-orders-detail.svg",
+    "mermaid": "case-orders-detail.mmd",
+    "number": 152
+  },
+  {
+    "id": "case-orders-overview",
+    "title": "Orders and payments: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-orders-overview.png",
+    "svg": "case-orders-overview.svg",
+    "mermaid": "case-orders-overview.mmd",
+    "number": 153
+  },
+  {
+    "id": "case-orders-sequence",
+    "title": "Orders and payments: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-orders-sequence.png",
+    "svg": "case-orders-sequence.svg",
+    "mermaid": "case-orders-sequence.mmd",
+    "number": 154
+  },
+  {
+    "id": "case-chat-detail",
+    "title": "Real-time chat: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the real-time chat case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-chat-detail.png",
+    "svg": "case-chat-detail.svg",
+    "mermaid": "case-chat-detail.mmd",
+    "number": 155
+  },
+  {
+    "id": "case-chat-overview",
+    "title": "Real-time chat: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-chat-overview.png",
+    "svg": "case-chat-overview.svg",
+    "mermaid": "case-chat-overview.mmd",
+    "number": 156
+  },
+  {
+    "id": "case-chat-sequence",
+    "title": "Real-time chat: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-chat-sequence.png",
+    "svg": "case-chat-sequence.svg",
+    "mermaid": "case-chat-sequence.mmd",
+    "number": 157
+  },
+  {
+    "id": "case-notify-detail",
+    "title": "Notification service: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the notification service case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-notify-detail.png",
+    "svg": "case-notify-detail.svg",
+    "mermaid": "case-notify-detail.mmd",
+    "number": 158
+  },
+  {
+    "id": "case-notify-overview",
+    "title": "Notification service: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-notify-overview.png",
+    "svg": "case-notify-overview.svg",
+    "mermaid": "case-notify-overview.mmd",
+    "number": 159
+  },
+  {
+    "id": "case-notify-sequence",
+    "title": "Notification service: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-notify-sequence.png",
+    "svg": "case-notify-sequence.svg",
+    "mermaid": "case-notify-sequence.mmd",
+    "number": 160
+  },
+  {
+    "id": "case-video-detail",
+    "title": "Video delivery: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the video delivery case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-video-detail.png",
+    "svg": "case-video-detail.svg",
+    "mermaid": "case-video-detail.mmd",
+    "number": 161
+  },
+  {
+    "id": "case-video-overview",
+    "title": "Video delivery: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-video-overview.png",
+    "svg": "case-video-overview.svg",
+    "mermaid": "case-video-overview.mmd",
+    "number": 162
+  },
+  {
+    "id": "case-video-sequence",
+    "title": "Video delivery: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-video-sequence.png",
+    "svg": "case-video-sequence.svg",
+    "mermaid": "case-video-sequence.mmd",
+    "number": 163
+  },
+  {
+    "id": "case-ai-detail",
+    "title": "AI inference platform: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the ai inference platform case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-ai-detail.png",
+    "svg": "case-ai-detail.svg",
+    "mermaid": "case-ai-detail.mmd",
+    "number": 164
+  },
+  {
+    "id": "case-ai-overview",
+    "title": "AI inference platform: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-ai-overview.png",
+    "svg": "case-ai-overview.svg",
+    "mermaid": "case-ai-overview.mmd",
+    "number": 165
+  },
+  {
+    "id": "case-ai-sequence",
+    "title": "AI inference platform: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-ai-sequence.png",
+    "svg": "case-ai-sequence.svg",
+    "mermaid": "case-ai-sequence.mmd",
+    "number": 166
+  },
+  {
+    "id": "case-jobs-detail",
+    "title": "Distributed job system: components and data",
+    "kind": "architecture",
+    "caption": "Detailed architecture for the distributed job system case. Follow labeled edges and read the adjacent failure analysis; the diagram is a logical design, not a claim of deployed infrastructure.",
+    "topics": [],
+    "png": "case-jobs-detail.png",
+    "svg": "case-jobs-detail.svg",
+    "mermaid": "case-jobs-detail.mmd",
+    "number": 167
+  },
+  {
+    "id": "case-jobs-overview",
+    "title": "Distributed job system: high-level responsibilities",
+    "kind": "architecture",
+    "caption": "This overview establishes the user, service responsibility, durable state, and external work. The detailed component diagram refines the same boundary.",
+    "topics": [],
+    "png": "case-jobs-overview.png",
+    "svg": "case-jobs-overview.svg",
+    "mermaid": "case-jobs-overview.mmd",
+    "number": 168
+  },
+  {
+    "id": "case-jobs-sequence",
+    "title": "Distributed job system: operation timeline",
+    "kind": "sequence",
+    "caption": "Read downward in time. Solid arrows show normal messages; dashed arrows mark a failure or alternative event. Durable acceptance and final business completion may occur at different points.",
+    "topics": [],
+    "png": "case-jobs-sequence.png",
+    "svg": "case-jobs-sequence.svg",
+    "mermaid": "case-jobs-sequence.mmd",
+    "number": 169
+  },
+  {
+    "id": "state-breaker",
+    "title": "Circuit breaker state transitions",
+    "kind": "state",
+    "caption": "Closed records eligible outcomes. Open rejects calls. Half-open limits recovery probes; success closes and failure reopens.",
+    "topics": [
+      10
+    ],
+    "png": "state-breaker.png",
+    "svg": "state-breaker.svg",
+    "mermaid": "state-breaker.mmd",
+    "number": 170
+  },
+  {
+    "id": "state-deploy",
+    "title": "Deployment lifecycle",
+    "kind": "state",
+    "caption": "Rollback requires compatible data and configuration; an artifact change cannot undo irreversible effects.",
+    "topics": [
+      6,
+      53,
+      55
+    ],
+    "png": "state-deploy.png",
+    "svg": "state-deploy.svg",
+    "mermaid": "state-deploy.mmd",
+    "number": 171
+  },
+  {
+    "id": "state-job",
+    "title": "Durable job lifecycle",
+    "kind": "state",
+    "caption": "The result commits before acknowledgment. Retry waiting is durable in a real implementation; dead letter requires ownership.",
+    "topics": [
+      15,
+      20
+    ],
+    "png": "state-job.png",
+    "svg": "state-job.svg",
+    "mermaid": "state-job.mmd",
+    "number": 172
+  },
+  {
+    "id": "state-payment",
+    "title": "Payment outcome and reconciliation",
+    "kind": "state",
+    "caption": "Unknown is not declined. A refund is a new financial action, not erasure of the original payment.",
+    "topics": [
+      14,
+      19
+    ],
+    "png": "state-payment.png",
+    "svg": "state-payment.svg",
+    "mermaid": "state-payment.mmd",
+    "number": 173
+  },
+  {
+    "id": "state-message",
+    "title": "Message processing lifecycle",
+    "kind": "state",
+    "caption": "Redelivery can occur after the effect succeeded. Deduplicate at the effect boundary.",
+    "topics": [
+      15,
+      20
+    ],
+    "png": "state-message.png",
+    "svg": "state-message.svg",
+    "mermaid": "state-message.mmd",
+    "number": 174
+  },
+  {
+    "id": "state-incident",
+    "title": "Incident lifecycle",
+    "kind": "state",
+    "caption": "Recovery includes business integrity and queue freshness. Review produces owned verifiable actions.",
+    "topics": [
+      109,
+      110,
+      111
+    ],
+    "png": "state-incident.png",
+    "svg": "state-incident.svg",
+    "mermaid": "state-incident.mmd",
+    "number": 175
+  },
+  {
+    "id": "state-token",
+    "title": "Credential lifecycle",
+    "kind": "state",
+    "caption": "Renewal requires its own valid grant. Expired or revoked access tokens must not authorize resource actions.",
+    "topics": [
+      69,
+      70
+    ],
+    "png": "state-token.png",
+    "svg": "state-token.svg",
+    "mermaid": "state-token.mmd",
+    "number": 176
+  },
+  {
+    "id": "state-cache",
+    "title": "Cache entry lifecycle",
+    "kind": "state",
+    "caption": "Expiration and eviction are different causes of absence. Refresh ownership limits a stampede.",
+    "topics": [
+      2,
+      50
+    ],
+    "png": "state-cache.png",
+    "svg": "state-cache.svg",
+    "mermaid": "state-cache.mmd",
+    "number": 177
+  },
+  {
+    "id": "ill-latency",
+    "title": "How a good mean hides slow requests",
+    "kind": "illustration",
+    "caption": "980 fast and 20 slow requests yield a 59.6 ms mean but a 2000 ms P99. The bars are a schematic, not a scaled histogram.",
+    "topics": [
+      91,
+      93
+    ],
+    "png": "ill-latency.png",
+    "svg": "ill-latency.svg",
+    "mermaid": null,
+    "number": 178
+  },
+  {
+    "id": "ill-queue",
+    "title": "Why a queue grows under sustained overload",
+    "kind": "illustration",
+    "caption": "Arrival minus service gives the backlog growth rate. The continuous-time estimate differs slightly from the discrete tick convention in the runnable model.",
+    "topics": [
+      15,
+      44
+    ],
+    "png": "ill-queue.png",
+    "svg": "ill-queue.svg",
+    "mermaid": null,
+    "number": 179
+  },
+  {
+    "id": "ill-scaling",
+    "title": "Vertical and horizontal capacity",
+    "kind": "illustration",
+    "caption": "A larger host and more hosts solve different constraints. Shared bottlenecks and failure domains still matter.",
+    "topics": [
+      46,
+      47
+    ],
+    "png": "ill-scaling.png",
+    "svg": "ill-scaling.svg",
+    "mermaid": null,
+    "number": 180
+  },
+  {
+    "id": "ill-replication",
+    "title": "Copies versus divided ownership",
+    "kind": "illustration",
+    "caption": "Top: each replica has A, B, and C. Bottom: shards own different subsets. Real systems can combine sharding with replication.",
+    "topics": [
+      30,
+      31,
+      32
+    ],
+    "png": "ill-replication.png",
+    "svg": "ill-replication.svg",
+    "mermaid": null,
+    "number": 181
+  },
+  {
+    "id": "ill-index",
+    "title": "B-tree search narrows the candidate range",
+    "kind": "illustration",
+    "caption": "The root directs key 72 toward the relevant sorted range. This is a conceptual tree; real page fanout and visibility rules are more complex.",
+    "topics": [
+      25
+    ],
+    "png": "ill-index.png",
+    "svg": "ill-index.svg",
+    "mermaid": null,
+    "number": 182
+  },
+  {
+    "id": "ill-budget",
+    "title": "One request, several latency budgets",
+    "kind": "illustration",
+    "caption": "Add only sequential phases. Parallel work uses the critical path rather than the sum of every span.",
+    "topics": [
+      11,
+      91
+    ],
+    "png": "ill-budget.png",
+    "svg": "ill-budget.svg",
+    "mermaid": null,
+    "number": 183
+  },
+  {
+    "id": "ill-capacity",
+    "title": "From daily users to concurrent work",
+    "kind": "illustration",
+    "caption": "Every step preserves its units and states its assumption. Peak factor and mean response time must later be measured.",
+    "topics": [
+      45,
+      92
+    ],
+    "png": "ill-capacity.png",
+    "svg": "ill-capacity.svg",
+    "mermaid": null,
+    "number": 184
+  },
+  {
+    "id": "ill-clock",
+    "title": "Clock labels can contradict causal order",
+    "kind": "illustration",
+    "caption": "The receiving host clock is behind. Use causal links for ordering and monotonic local clocks for elapsed time.",
+    "topics": [
+      60,
+      96
+    ],
+    "png": "ill-clock.png",
+    "svg": "ill-clock.svg",
+    "mermaid": null,
+    "number": 185
+  },
+  {
+    "id": "ill-backoff",
+    "title": "Exponential retry windows with full jitter",
+    "kind": "illustration",
+    "caption": "Each retry samples a different window; the cap and total deadline still bound the policy.",
+    "topics": [
+      12,
+      13
+    ],
+    "png": "ill-backoff.png",
+    "svg": "ill-backoff.svg",
+    "mermaid": null,
+    "number": 186
+  },
+  {
+    "id": "ill-breaker",
+    "title": "Circuit breaker failure and recovery timeline",
+    "kind": "illustration",
+    "caption": "Failures open the breaker, a cooldown rejects work, and a limited probe tests recovery. This timeline supplements the state diagram.",
+    "topics": [
+      10
+    ],
+    "png": "ill-breaker.png",
+    "svg": "ill-breaker.svg",
+    "mermaid": null,
+    "number": 187
+  },
+  {
+    "id": "ill-rpo",
+    "title": "Recovery point and recovery time are different",
+    "kind": "illustration",
+    "caption": "RPO concerns how recent recoverable data must be; RTO concerns how long restoring service may take.",
+    "topics": [
+      83,
+      84
+    ],
+    "png": "ill-rpo.png",
+    "svg": "ill-rpo.svg",
+    "mermaid": null,
+    "number": 188
+  },
+  {
+    "id": "ill-batching",
+    "title": "Batching trades waiting for shared execution",
+    "kind": "illustration",
+    "caption": "Bound both queue delay and memory. Compatible shapes and useful throughput determine whether batching helps.",
+    "topics": [
+      44,
+      88,
+      92
+    ],
+    "png": "ill-batching.png",
+    "svg": "ill-batching.svg",
+    "mermaid": null,
+    "number": 189
+  },
+  {
+    "id": "ill-pool",
+    "title": "Connection ownership and bounded waiting",
+    "kind": "illustration",
+    "caption": "Each token represents one reusable connection. Exceptions must return ownership; adding application replicas multiplies potential demand.",
+    "topics": [
+      28
+    ],
+    "png": "ill-pool.png",
+    "svg": "ill-pool.svg",
+    "mermaid": null,
+    "number": 190
+  },
+  {
+    "id": "ill-envelope",
+    "title": "Envelope encryption separates data and key protection",
+    "kind": "illustration",
+    "caption": "The data key encrypts content; a separately controlled wrapping key protects the data key. Restore needs both authorized paths.",
+    "topics": [
+      67,
+      72
+    ],
+    "png": "ill-envelope.png",
+    "svg": "ill-envelope.svg",
+    "mermaid": null,
+    "number": 191
+  },
+  {
+    "id": "ill-fanout",
+    "title": "Fanout amplifies the probability of a slow branch",
+    "kind": "illustration",
+    "caption": "The calculation assumes independent branch events and all branches required. Correlation and partial-result contracts change the result.",
+    "topics": [
+      94
+    ],
+    "png": "ill-fanout.png",
+    "svg": "ill-fanout.svg",
+    "mermaid": null,
+    "number": 192
+  },
+  {
+    "id": "ill-migration",
+    "title": "Expand-and-contract migration sequence",
+    "kind": "illustration",
+    "caption": "The old contract remains during mixed-version operation. Removing it is a separate, later change after backfill and rollback requirements are satisfied.",
+    "topics": [
+      81,
+      82
+    ],
+    "png": "ill-migration.png",
+    "svg": "ill-migration.svg",
+    "mermaid": null,
+    "number": 193
+  },
+  {
+    "id": "backpressure-analogy",
+    "title": "Backpressure as a bounded restaurant ticket rack",
+    "kind": "illustration",
+    "caption": "Left: arriving orders accumulate faster than one chef can finish them. Right: the same chef has a bounded rack and upstream admission pauses. The illustration is qualitative; the queue model supplies the arithmetic.",
+    "topics": [
+      44
+    ],
+    "png": "backpressure-analogy.png",
+    "svg": null,
+    "mermaid": null,
+    "number": 194
+  }
+]

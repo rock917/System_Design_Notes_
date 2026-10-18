@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Change ready for release"]
+  N1["Identify public contract impact"]
+  N2{"Incompatible supported behavior?"}
+  N3["Increment major"]
+  N4["Choose minor or patch by change"]
+  N5["Publish immutable version and notes"]
+  N6["Validate consumers and lock resolution"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

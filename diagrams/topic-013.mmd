@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Retry approved"]
+  N1["Calculate capped window"]
+  N2{"Deadline allows another attempt?"}
+  N3["Sample jitter delay"]
+  N4["Stop retrying"]
+  N5["Wait then attempt"]
+  N6["Record outcome"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

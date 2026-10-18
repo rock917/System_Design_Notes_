@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Server asked to fetch URL"]
+  N1["Validate allowed scheme host and port"]
+  N2{"Destination and actual route permitted?"}
+  N3["Fetch with bounded resources"]
+  N4["Deny and audit target metadata"]
+  N5["Revalidate redirects and response"]
+  N6["Return safe processed content"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

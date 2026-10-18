@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Invocation arrives"]
+  N1["Check quotas and execution budget"]
+  N2{"Work fits synchronous limits?"}
+  N3["Execute bounded idempotent task"]
+  N4["Reject or enqueue durable job"]
+  N5["Persist result outside ephemeral runtime"]
+  N6["Observe throttling and cost"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

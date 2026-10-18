@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Global routing"]
+  N1["Region A API"]
+  N2["Region B API"]
+  N3["Writer A"]
+  N4["Replica B"]
+  N5["Fencing authority"]
+  N0 -->|normal route| N1
+  N0 -->|regional route| N2
+  N1 -->|write| N3
+  N3 -->|replicate| N4
+  N2 -->|eligible read| N4
+  N5 -.->|authority| N3
+  N5 -.->|promotion gate| N4

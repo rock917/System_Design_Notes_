@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant P0 as Buyer
+  participant P1 as Orders
+  participant P2 as Database
+  participant P3 as Payment
+  P0->>P1: Checkout with key K
+  P1->>P2: Commit order reservation and intent
+  P2->>P1: Durable pending order
+  P1->>P3: Pay with stable operation ID
+  P3-->>P1: Response lost: outcome unknown
+  P1->>P3: Query original operation
+  P3->>P1: Confirmed result
+  P1->>P2: Confirm order and outbox
+  P1->>P0: Stable order state

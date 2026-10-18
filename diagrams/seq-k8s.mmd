@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Controller
+  participant P1 as Kubelet
+  participant P2 as Pod
+  participant P3 as Service
+  P0->>P1: Desired new Pod
+  P1->>P2: Start container
+  P1->>P2: Startup probe
+  P2->>P1: Initialization complete
+  P1->>P2: Readiness probe
+  P2->>P1: Ready
+  P1->>P3: Endpoint eligibility update
+  P3->>P2: Route new traffic

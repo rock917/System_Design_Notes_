@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Regression detected"]
+  N1["Identify change and data effects"]
+  N2{"Previous version compatible?"}
+  N3["Restore known-good release"]
+  N4["Apply controlled forward repair"]
+  N5["Verify user recovery"]
+  N6["Document residual effects"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

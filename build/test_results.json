@@ -1,0 +1,56 @@
+{
+  "tests_run": 44,
+  "passed": 40,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "skip_reasons": [
+    "set RUN_SOCKET_TESTS=1 for loopback integration tests",
+    "set RUN_SOCKET_TESTS=1 for loopback integration tests",
+    "set RUN_SOCKET_TESTS=1 for loopback integration tests",
+    "set RUN_SOCKET_TESTS=1 for loopback integration tests"
+  ],
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "demo_results": {
+    "algorithms": {
+      "exit_code": 0,
+      "stdout": "initial admission: [True, True, True, True, True, False]\nafter 0.5s: True\ncache hit: book\nexpired: None\nbreaker after failures: open\nprobe: recovered closed\njitter seconds: [0.0324, 0.0302, 0.2604, 0.0579]\nrouting: ['A', 'B', 'C', 'A', 'B', 'C']\nprojection: {'product': (3, 'value-3')}\nfive-node quorum, reachable 2/3: False True\n",
+      "stderr": ""
+    },
+    "orders": {
+      "exit_code": 0,
+      "stdout": "concurrent replay order IDs: [1, 1, 1, 1]\nfirst event: True\nduplicate event: False\nrow counts: {'orders': 1, 'operations': 1, 'outbox': 1, 'inbox': 1, 'notifications': 1}\nbackup restores same counts: True\n",
+      "stderr": ""
+    },
+    "messaging": {
+      "exit_code": 0,
+      "stdout": "effects: 1 completed: ['a']\nDLQ: [('b', 3)]\nSaga confirmed : new -> reserved -> confirmed reserved: True\nSaga declined : new -> reserved -> compensating -> rejected reserved: False\nSaga unknown : new -> reserved -> reconcile-payment reserved: True\nsame scheduled period: True False\n",
+      "stderr": ""
+    },
+    "concurrency": {
+      "exit_code": 0,
+      "stdout": "pool token returned: True\nfencing: stale fencing token\nbounded queue: {'backlog': 900, 'rejected': 300, 'completed': 6000}\nworkers at 70% target: 9\nlost update: {'sales': 2, 'final_stock': 0}\ndeadlock cycle: True\nretention: {'grew': True, 'released': True}\n",
+      "stderr": ""
+    },
+    "performance": {
+      "exit_code": 0,
+      "stdout": "mean ms: 59.6\nP50/P95/P99 ms: 20 20 2000\n100-branch slow chance: 0.634\nin-flight at 500/s and 0.2s: 100.0\nSLO: {'success_ratio': 0.99, 'allowed_bad': 10.0, 'remaining_bad': -90.0, 'burn_rate': 10.0}\nparallel critical path ms: 110\n",
+      "stderr": ""
+    },
+    "security": {
+      "exit_code": 0,
+      "stdout": "bound apostrophe query: [(\"O'Reilly\",)]\nSQL-looking text returns: []\nHTML text encoding: &lt;b&gt;review&lt;/b&gt;\nvalid/tampered webhook: True False\npartner/lookalike: True False\ncross-tenant authorization: False\nsafe log: {\"event\": \"order.accepted\", \"order_id\": 1}\n",
+      "stderr": ""
+    },
+    "protocols": {
+      "exit_code": 0,
+      "stdout": "partial read messages: []\ncompleted messages: [{'message': 'one'}, {'message': 'two'}] remaining bytes: 0\nSSE frame: 'id: 42\\ndata: {\"status\": \"shipped\"}\\n\\n'\nreconnect after 1: [{'id': 2}]\nold schema adapter: {'amount_minor': 19900, 'currency': 'INR'}\n",
+      "stderr": ""
+    },
+    "incident_drill": {
+      "exit_code": 0,
+      "stdout": "09:00 Release B reaches 25% of checkout traffic.\n09:04 B P99 rises; database CPU remains low; pool acquisition wait rises.\n09:06 Traces show B holds a DB connection while awaiting the payment provider.\n09:08 Feature flag disables the new path; no schema contraction occurred.\n09:12 Success and latency recover; 14 payment outcomes remain unknown.\n09:20 Provider operation-ID reconciliation resolves all 14 outcomes.\nAt 09:12 complete: False\nAt 09:20 complete: True\nAction: add a test proving DB connections are released before provider I/O.\nOwner: checkout team. Verification: failure-injected integration test plus rollout telemetry.\n",
+      "stderr": ""
+    }
+  }
+}

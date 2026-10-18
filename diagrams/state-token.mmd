@@ -1,0 +1,12 @@
+stateDiagram-v2
+  state "Issued" as S0
+  state "Valid" as S1
+  state "Expired" as S2
+  state "Revoked" as S3
+  state "Renewed" as S4
+  [*] --> S0
+  S0 --> S1: validated claims
+  S1 --> S2: expiry reached
+  S1 --> S3: revocation
+  S2 --> S4: valid renewal grant
+  S4 --> S1: new token issued

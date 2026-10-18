@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Browser"]
+  N1["Authorization server"]
+  N2["Application session"]
+  N3["API gateway"]
+  N4["Resource service"]
+  N5["Owned data"]
+  N0 -->|authorize| N1
+  N1 -->|code exchange| N2
+  N2 -->|credential| N3
+  N3 -->|verified principal| N4
+  N4 -->|ownership check| N5

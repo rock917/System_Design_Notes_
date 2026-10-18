@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Query or insert"]
+  N1["Evaluate partition key"]
+  N2{"Matching partition exists?"}
+  N3["Route or prune partitions"]
+  N4["Reject or create controlled partition"]
+  N5["Apply local indexes and constraints"]
+  N6["Return or archive data"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

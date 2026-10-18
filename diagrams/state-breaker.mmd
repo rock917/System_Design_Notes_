@@ -1,0 +1,9 @@
+stateDiagram-v2
+  state "Closed" as S0
+  state "Open" as S1
+  state "Half-open" as S2
+  [*] --> S0
+  S0 --> S1: failure threshold
+  S1 --> S2: cooldown
+  S2 --> S0: probe succeeds
+  S2 --> S1: probe fails

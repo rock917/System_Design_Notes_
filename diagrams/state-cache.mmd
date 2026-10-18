@@ -1,0 +1,13 @@
+stateDiagram-v2
+  state "Absent" as S0
+  state "Fresh" as S1
+  state "Expired" as S2
+  state "Refreshing" as S3
+  state "Evicted" as S4
+  [*] --> S0
+  S0 --> S3: miss and refresh owner
+  S3 --> S1: origin result stored
+  S1 --> S2: TTL elapsed
+  S2 --> S3: refresh admitted
+  S1 --> S4: capacity eviction
+  S4 --> S0: entry unavailable

@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Build step requested"]
+  N1["Hash complete declared inputs"]
+  N2{"Trusted matching cache entry exists?"}
+  N3["Reuse validated output"]
+  N4["Execute step and record output"]
+  N5["Verify final artifact provenance"]
+  N6["Measure saved build time"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["New instance allocated"]
+  N1["Load runtime artifacts and model"]
+  N2{"Initialization verified?"}
+  N3["Mark ready and warm paths"]
+  N4["Retry boundedly or fail startup"]
+  N5["Accept bounded traffic"]
+  N6["Measure cold and warm behavior"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

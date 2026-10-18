@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Mutation received"]
+  N1["Look up scoped key"]
+  N2{"Completed matching request?"}
+  N3["Replay stored response"]
+  N4["Claim key atomically"]
+  N5["Commit effect and result"]
+  N6["Return stable operation ID"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N6
+  N4 -.-> N5
+  N5 --> N6

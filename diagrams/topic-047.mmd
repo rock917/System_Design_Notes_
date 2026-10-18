@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Capacity limit observed"]
+  N1["Profile limiting resource"]
+  N2{"Larger host addresses bottleneck?"}
+  N3["Resize through controlled change"]
+  N4["Optimize workload instead"]
+  N5["Benchmark and check recovery"]
+  N6["Keep justified capacity"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Untrusted query input"]
+  N1["Bind values and restrict DB role"]
+  N2{"Identifiers from allowlist?"}
+  N3["Execute parameterized statement"]
+  N4["Reject unsupported query shape"]
+  N5["Read only authorized rows"]
+  N6["Return scoped rows and safe errors"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

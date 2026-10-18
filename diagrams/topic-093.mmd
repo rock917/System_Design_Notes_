@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Collect latency population"]
+  N1["Validate sample size and boundaries"]
+  N2{"Distribution data aggregatable?"}
+  N3["Compute percentile from combined samples"]
+  N4["Avoid averaging local percentiles"]
+  N5["Inspect tail cohort and errors"]
+  N6["Report threshold with uncertainty"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

@@ -1,0 +1,12 @@
+stateDiagram-v2
+  state "Available" as S0
+  state "In flight" as S1
+  state "Acknowledged" as S2
+  state "Redelivered" as S3
+  state "Quarantined" as S4
+  [*] --> S0
+  S0 --> S1: consumer receives
+  S1 --> S2: durable effect then ack
+  S1 --> S3: lease or ack lost
+  S3 --> S1: new attempt
+  S1 --> S4: poison policy

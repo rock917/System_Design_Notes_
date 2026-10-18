@@ -1,0 +1,6 @@
+apiVersion: v2
+name: shopstream-inference
+description: Local educational inference deployment
+type: application
+version: 0.1.0
+appVersion: "toy-linear-v1"

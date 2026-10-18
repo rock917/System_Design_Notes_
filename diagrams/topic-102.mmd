@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Contract change proposed"]
+  N1["Assess supported client behavior"]
+  N2{"Backward compatible under contract?"}
+  N3["Evolve existing version"]
+  N4["Introduce explicit new version"]
+  N5["Test and communicate migration"]
+  N6["Retire by usage and policy"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

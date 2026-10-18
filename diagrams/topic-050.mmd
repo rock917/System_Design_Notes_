@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Source update commits"]
+  N1["Publish versioned invalidation"]
+  N2{"Cache entry older than source?"}
+  N3["Remove or supersede entry"]
+  N4["Keep current or newer entry"]
+  N5["Coalesce subsequent refresh"]
+  N6["Verify freshness contract"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

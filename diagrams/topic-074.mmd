@@ -1,0 +1,15 @@
+flowchart TD
+  N0["HTTP request reaches boundary"]
+  N1["Normalize and inspect policy"]
+  N2{"Request allowed by rules?"}
+  N3["Forward to application controls"]
+  N4["Block or challenge and record"]
+  N5["Review false positives and coverage"]
+  N6["Update rules with code fixes"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

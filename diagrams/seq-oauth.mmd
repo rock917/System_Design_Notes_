@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant P0 as Browser
+  participant P1 as Client
+  participant P2 as Auth server
+  participant P3 as Resource API
+  P1->>P0: Start bound authorization request
+  P0->>P2: Authorize with code challenge
+  P2->>P0: Redirect with short-lived code
+  P0->>P1: Deliver code and bound state
+  P1->>P2: Exchange code plus verifier
+  P2->>P1: Audience-specific tokens
+  P1->>P3: Access token
+  P3->>P1: Authorized resource

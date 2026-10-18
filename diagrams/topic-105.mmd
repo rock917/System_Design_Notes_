@@ -1,0 +1,14 @@
+flowchart TD
+  N0["Configuration prepared"]
+  N1["Initialize and compare state with provider"]
+  N2{"Plan matches intended scoped change?"}
+  N3["Apply reviewed plan"]
+  N4["Stop and inspect drift or replacement"]
+  N5["Persist protected state"]
+  N6["Verify resources and recovery"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

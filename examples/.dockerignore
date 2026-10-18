@@ -1,0 +1,10 @@
+__pycache__/
+*.db
+*.log
+test_examples.py
+helm/
+.venv/
+.terraform/
+*.tfstate*
+*.tfplan
+actual_outputs/

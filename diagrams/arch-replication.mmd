@@ -1,0 +1,13 @@
+flowchart TD
+  N0["Writer"]
+  N1["Primary database"]
+  N2["Replication log"]
+  N3["Replica A"]
+  N4["Replica B"]
+  N5["Reader"]
+  N0 -->|write| N1
+  N1 -->|append| N2
+  N2 -->|replay| N3
+  N2 -->|replay| N4
+  N5 -->|eligible read| N3
+  N5 -->|fresh read| N1

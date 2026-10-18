@@ -1,0 +1,12 @@
+flowchart TD
+  N0["Client"]
+  N1["API gateway"]
+  N2["Quota store"]
+  N3["Order service"]
+  N4["Identity keys"]
+  N5["Orders database"]
+  N0 -->|credential| N1
+  N1 -->|atomic debit| N2
+  N1 -.->|verify key| N4
+  N1 -->|principal| N3
+  N3 -->|owner-scoped SQL| N5

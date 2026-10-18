@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Health observation due"]
+  N1["Evaluate scoped capability"]
+  N2{"Check succeeds within deadline?"}
+  N3["Keep eligible status"]
+  N4["Apply matching routing or alert action"]
+  N5["Record reason and duration"]
+  N6["Reevaluate with hysteresis"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

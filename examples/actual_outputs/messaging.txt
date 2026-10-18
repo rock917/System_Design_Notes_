@@ -1,0 +1,6 @@
+effects: 1 completed: ['a']
+DLQ: [('b', 3)]
+Saga confirmed : new -> reserved -> confirmed reserved: True
+Saga declined : new -> reserved -> compensating -> rejected reserved: False
+Saga unknown : new -> reserved -> reconcile-payment reserved: True
+same scheduled period: True False

@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant P0 as Client
+  participant P1 as Gateway
+  participant P2 as Batcher
+  participant P3 as Model
+  P0->>P1: Versioned bounded input
+  P1->>P2: Admit under deadline
+  P2->>P3: Compatible bounded batch
+  P3->>P2: Model output and timing
+  P2->>P1: Per-request result
+  P1->>P0: Response with model version
+  P0-->>P1: Optional cancellation

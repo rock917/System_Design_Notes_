@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Change committed"]
+  N1["Propagate versioned update"]
+  N2{"Update newer or mergeable?"}
+  N3["Apply deterministic merge"]
+  N4["Ignore stale or quarantine conflict"]
+  N5["Repair missed changes"]
+  N6["Converge under assumptions"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

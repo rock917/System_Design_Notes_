@@ -1,0 +1,15 @@
+flowchart TD
+  N0["Observe event or value"]
+  N1["Select counter gauge or histogram"]
+  N2{"Labels bounded and units clear?"}
+  N3["Record measurement"]
+  N4["Correct schema before export"]
+  N5["Aggregate compatible populations"]
+  N6["Compute meaningful indicator"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6
+  N4 -.-> N5

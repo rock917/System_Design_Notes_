@@ -1,0 +1,14 @@
+flowchart TD
+  N0["API request"]
+  N1["Verify caller and contract"]
+  N2{"Policy permits request?"}
+  N3["Route to service"]
+  N4["Return 401 403 or 429"]
+  N5["Check object authorization"]
+  N6["Return result"]
+  N0 --> N1
+  N1 --> N2
+  N2 -->|Yes| N3
+  N2 -.->|No| N4
+  N3 --> N5
+  N5 --> N6

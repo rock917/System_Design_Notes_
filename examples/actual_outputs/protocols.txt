@@ -1,0 +1,5 @@
+partial read messages: []
+completed messages: [{'message': 'one'}, {'message': 'two'}] remaining bytes: 0
+SSE frame: 'id: 42\ndata: {"status": "shipped"}\n\n'
+reconnect after 1: [{'id': 2}]
+old schema adapter: {'amount_minor': 19900, 'currency': 'INR'}
